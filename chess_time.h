@@ -1,0 +1,7 @@
+#ifndef CHESS_TIME_H
+#define CHESS_TIME_H
+
+#define HOUR_MILLIS     3600000
+#define MINUTE_MILLIS   60000
+#define SECOND_MILLIS   1000
+#endif  // CHESS_TIME_H

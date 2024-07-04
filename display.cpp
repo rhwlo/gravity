@@ -139,6 +139,7 @@ void SSD1306Display::renderGameState(GameState *game_state) {
         display->setTextSize(2);
         display->println(F("PAUSED"));
     } else {
+        display->setTextSize(2);
         display->println();
     }
     display->setTextSize(3);

@@ -1,70 +1,74 @@
 #include "display.h"
 #include "chess_time.h"
-#include <HardwareSerial.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
-SerialDisplay::SerialDisplay(void) {
+
+SerialDisplay::SerialDisplay(Stream *s) {
+    serial = s;
+}
+
+void SerialDisplay::begin(void) {
 }
 
 void SerialDisplay::prettyPrintTime(unsigned long time) {
     unsigned long remaining_time = time;
     if (remaining_time >= HOUR_MILLIS * 10) {
-        Serial.print((int) (remaining_time / HOUR_MILLIS), 10);
+        serial->print((int) (remaining_time / HOUR_MILLIS), 10);
     } else if (remaining_time >= HOUR_MILLIS) {
-        Serial.print("0");
-        Serial.print((int) (remaining_time / HOUR_MILLIS), 10);
+        serial->print("0");
+        serial->print((int) (remaining_time / HOUR_MILLIS), 10);
     } else {
-        Serial.print("00");
+        serial->print("00");
     }
     remaining_time %= HOUR_MILLIS;
 
-    Serial.print(':');
+    serial->print(':');
 
     if (remaining_time >= MINUTE_MILLIS * 10) {
-        Serial.print((int) (remaining_time / MINUTE_MILLIS), 10);
+        serial->print((int) (remaining_time / MINUTE_MILLIS), 10);
     } else if (remaining_time >= MINUTE_MILLIS) {
-        Serial.print("0");
-        Serial.print((int) (remaining_time / MINUTE_MILLIS), 10);
+        serial->print("0");
+        serial->print((int) (remaining_time / MINUTE_MILLIS), 10);
     } else {
-        Serial.print("00");
+        serial->print("00");
     }
     remaining_time %= MINUTE_MILLIS;
 
-    Serial.print(':');
+    serial->print(':');
 
     if (remaining_time >= SECOND_MILLIS * 10) {
-        Serial.print((int) (remaining_time / SECOND_MILLIS), 10);
+        serial->print((int) (remaining_time / SECOND_MILLIS), 10);
     } else if (remaining_time >= SECOND_MILLIS) {
-        Serial.print("0");
-        Serial.print((int) (remaining_time / SECOND_MILLIS), 10);
+        serial->print("0");
+        serial->print((int) (remaining_time / SECOND_MILLIS), 10);
     } else {
-        Serial.print("00");
+        serial->print("00");
     }
 }
 
 void SerialDisplay::renderGameState(GameState *game_state) {
     if (game_state->paused) {
-        Serial.println("PAUSED");
+        serial->println("PAUSED");
     }
     if (game_state->player_states[0].outOfTime || game_state->player_states[1].outOfTime) {
-        Serial.print("Out of time: ");
+        serial->print("Out of time: ");
         if (game_state->player_states[PLAYER_WHITE].outOfTime) {
-            Serial.print("W ");
+            serial->print("W ");
         }
         if (game_state->player_states[PLAYER_WHITE].outOfTime) {
-            Serial.print("B ");
+            serial->print("B ");
         }
-        Serial.println();
+        serial->println();
     }
     if (game_state->whoseTurn == PLAYER_WHITE) {
-        Serial.println("White to move");
+        serial->println("White to move");
         prettyPrintTime(game_state->player_states[PLAYER_WHITE].remainingMillis);
-        Serial.println();
+        serial->println();
     } else {
-        Serial.println("Black to move");
+        serial->println("Black to move");
         prettyPrintTime(game_state->player_states[PLAYER_BLACK].remainingMillis);
-        Serial.println();
+        serial->println();
     }
 }
 

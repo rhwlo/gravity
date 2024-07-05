@@ -2,7 +2,9 @@
 #define DISPLAY_H
 
 #include "game_state.h"
-#include <Adafruit_GFX.h>
+#ifndef ARDUINO
+#define ARDUINO 100 
+#endif  // ARDUINO
 #include <Adafruit_SSD1306.h>
 
 // class ChessDisplay {
@@ -14,11 +16,13 @@
 
 class SerialDisplay {
     public:
-        SerialDisplay(void);
+        SerialDisplay(Stream *s);
         // ~SerialDisplay(void);
         void renderGameState(GameState *game_state);
+        void begin(void);
     private:
         void prettyPrintTime(unsigned long time);
+        Stream *serial;
 };
 
 class SSD1306Display {

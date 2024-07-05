@@ -1,4 +1,7 @@
 #include <Arduino.h>
+#ifndef ARDUINO
+#define ARDUINO 100
+#endif
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <Wire.h>
@@ -6,13 +9,21 @@
 #include "game_state.h"
 #include "display.h"
 
+#define CHESS_OLED_DISPLAY
+#define USE_LEDS
+#define USE_BUZZER
 
+
+// pins
 #define PLAYER1_BUTTON_PIN      A0
+#define PLAYER1_LED_PIN         6
 #define PLAYER2_BUTTON_PIN      A1
+#define PLAYER2_LED_PIN         5
 #define PAUSE_BUTTON_PIN        A2
-#define P1_BUTTON(x)            x & 0b001
-#define P2_BUTTON(x)            x & 0b010
-#define PAUSE_BUTTON(x)         x & 0b100
+#define BUZZER_PIN              9
+
+#define LED_HIGH                128
+#define BUZZER_TONE             662  // Eb
 #define DEBOUNCE_DELAY          50
 #define PRINT_INTERVAL          500
 
@@ -21,20 +32,43 @@ unsigned long lastIncr = 0;
 unsigned long lastPrinted = 0;
 
 GameState game_state = GameState(&standard_settings);
-//SerialDisplay display = SerialDisplay();
+#ifdef CHESS_SERIAL_DISPLAY
+SerialDisplay display = SerialDisplay(&Serial);
+#endif // CHESS_SERIAL_DISPLAY
+#ifdef CHESS_OLED_DISPLAY
 Adafruit_SSD1306 sdisplay(128, 64, &Wire, -1);
 SSD1306Display display(&sdisplay);
+#endif // CHESS_OLED_DISPLAY
 
 void setup()
 {
-    unsigned long now = millis();
-    lastDebounceTime = now;
-    lastIncr = now;
-    lastPrinted = now;
     pinMode(PLAYER1_BUTTON_PIN, INPUT_PULLUP);
     pinMode(PLAYER2_BUTTON_PIN, INPUT_PULLUP);
     pinMode(PAUSE_BUTTON_PIN,   INPUT_PULLUP);
     display.begin();
+    #ifdef USE_LEDS
+    pinMode(PLAYER1_LED_PIN, OUTPUT);
+    pinMode(PLAYER2_LED_PIN, OUTPUT);
+    digitalWrite(PLAYER1_LED_PIN, LOW);
+    digitalWrite(PLAYER2_LED_PIN, LOW);
+    #endif
+    #ifdef USE_BUZZER
+    pinMode(BUZZER_PIN, OUTPUT);
+    #endif
+}
+
+void tripleBeep(void) {
+    tone(BUZZER_PIN, 662);
+    delay(110);
+    noTone(BUZZER_PIN);
+    delay(40);
+    tone(BUZZER_PIN, 662);
+    delay(110);
+    noTone(BUZZER_PIN);
+    delay(40);
+    tone(BUZZER_PIN, 662);
+    delay(110);
+    noTone(BUZZER_PIN);
 }
 
 void handleButtonReads(GameState *gs) {
@@ -45,11 +79,26 @@ void handleButtonReads(GameState *gs) {
     lastDebounceTime = now;
 
     if (!digitalRead(PAUSE_BUTTON_PIN)) {
+        #ifdef USE_LEDS
+        digitalWrite(PLAYER1_LED_PIN, LOW);
+        digitalWrite(PLAYER2_LED_PIN, LOW);
+        #endif
+        #ifdef USE_BUZZER
+        tripleBeep();
+        #endif
         gs->pause();
     } else if (!digitalRead(PLAYER1_BUTTON_PIN)) {
         gs->setTurn(PLAYER_BLACK);
+        #ifdef USE_LEDS
+        analogWrite(PLAYER1_LED_PIN, 0);
+        analogWrite(PLAYER2_LED_PIN, LED_HIGH);
+        #endif
     } else if (!digitalRead(PLAYER2_BUTTON_PIN)) {
         gs->setTurn(PLAYER_WHITE);
+        #ifdef USE_LEDS
+        analogWrite(PLAYER1_LED_PIN, LED_HIGH);
+        analogWrite(PLAYER2_LED_PIN, 0);
+        #endif
     }
 }
 
@@ -70,4 +119,7 @@ void loop()
         display.renderGameState(&game_state);
         lastPrinted = now;
     }
+    
+    #ifdef USE_LEDS
+    #endif
 }

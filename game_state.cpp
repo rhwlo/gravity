@@ -87,7 +87,7 @@ game_settings_t setting_blitz_30s_0 = {
         },
     },
     false,                      // warning beep
-    false                       // flag beep
+    true                        // flag beep
 };
 
 game_settings_t standard_settings = {

@@ -118,17 +118,6 @@ void SSD1306Display::renderGameState(GameState *game_state) {
     display->clearDisplay();
     display->setTextColor(SSD1306_WHITE);
     display->setCursor(0,0);
-    display->setTextSize(1);
-    if (game_state->player_states[0].outOfTime || game_state->player_states[1].outOfTime) {
-        display->print("Out of time: ");
-        if (game_state->player_states[PLAYER_WHITE].outOfTime) {
-            display->print("W ");
-        }
-        if (game_state->player_states[PLAYER_WHITE].outOfTime) {
-            display->print("B ");
-        }
-        display->println();
-    }
     display->setTextSize(2);
     if (game_state->whoseTurn == PLAYER_WHITE) {
         display->print("White");
@@ -137,11 +126,15 @@ void SSD1306Display::renderGameState(GameState *game_state) {
     }
     display->setTextSize(1);
     display->setCursor(display->getCursorX(), display->getCursorY() + 6);
-    display->println(" to move");
+    if (game_state->curr_player_state->outOfTime) {
+        display->println(" out of time");
+    } else {
+        display->println(" to move");
+    }
     display->println();
     if (game_state->paused) {
         display->setTextSize(2);
-        display->println(F("PAUSED"));
+        display->println(("PAUSED"));
     } else {
         display->setTextSize(2);
         display->println();

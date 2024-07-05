@@ -7,17 +7,14 @@
 #endif  // ARDUINO
 #include <Adafruit_SSD1306.h>
 
-// class ChessDisplay {
-//     public:
-//         ChessDisplay(void);
-//         ~ChessDisplay(void);
-//         virtual void renderGameState(GameState *game_state);
-// };
+class ChessDisplay {
+    public:
+        virtual void renderGameState(GameState *game_state);
+};
 
-class SerialDisplay {
+class SerialDisplay : public ChessDisplay {
     public:
         SerialDisplay(Stream *s);
-        // ~SerialDisplay(void);
         void renderGameState(GameState *game_state);
         void begin(void);
     private:
@@ -25,7 +22,7 @@ class SerialDisplay {
         Stream *serial;
 };
 
-class SSD1306Display {
+class SSD1306Display : public ChessDisplay {
     public:
         SSD1306Display(Adafruit_SSD1306 *d);
         void begin(void);

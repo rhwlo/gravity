@@ -28,9 +28,9 @@ bool GameState::setTurn(unsigned short newTurn) {
     whoseTurn = newTurn;
     curr_player_state = &(player_states[whoseTurn]);
     paused = false;
-    if (!player_states[whoseTurn].outOfTime) {
-        player_states[whoseTurn].gracePeriodMillis = settings->player_settings[whoseTurn].gracePeriodMillis;
-        player_states[whoseTurn].remainingMillis += settings->player_settings[whoseTurn].perTurnIncrMillis;
+    if (!curr_player_state->outOfTime) {
+        curr_player_state->gracePeriodMillis = settings->player_settings[whoseTurn].gracePeriodMillis;
+        curr_player_state->remainingMillis += settings->player_settings[whoseTurn].perTurnIncrMillis;
     }
     return true;
 }

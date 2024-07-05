@@ -110,6 +110,7 @@ void handleButtonReads(GameState *gs) {
 
 void handleTimerIncr(GameState *gs) {
     unsigned long now = millis();
+    bool wasZero = false;
     if (!gs->paused) {
         if (gs->curr_player_state->gracePeriodMillis > 0) {
             gs->curr_player_state->gracePeriodMillis -= min(
@@ -117,11 +118,12 @@ void handleTimerIncr(GameState *gs) {
                 (gs->curr_player_state->gracePeriodMillis)
             );
         } else {
+            wasZero = (gs->curr_player_state->remainingMillis == 0);
             gs->curr_player_state->remainingMillis -= min(
                 (now - lastIncr),
                 (gs->curr_player_state->remainingMillis)
             );
-            if (gs->curr_player_state->remainingMillis == 0) {
+            if (gs->curr_player_state->remainingMillis == 0 && !wasZero) {
                 gs->curr_player_state->outOfTime = true;
                 #ifdef USE_BUZZER
                 if (gs->settings->flagBeep) {

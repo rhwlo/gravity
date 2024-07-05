@@ -36,20 +36,11 @@ class GameState {
         void pause(void);
         unsigned short whoseTurn;
         player_state_t player_states[NUM_PLAYERS];
-    private:
+        player_state_t *curr_player_state;
         game_settings_t *settings;
 };
 
-struct game_state_t
-{
-    bool paused;
-    bool blacksTurn;
-    player_state_t white;
-    player_state_t black;
-    game_settings_t *settings;
-};
-
-extern game_settings_t setting_blitz_5_0, standard_settings;
+extern game_settings_t setting_blitz_5m_0, standard_settings, setting_blitz_30s_0, setting_blitz_5m_3s;
 
 
 #endif  // GAME_STATE_H

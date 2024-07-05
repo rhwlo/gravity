@@ -31,7 +31,7 @@ unsigned long lastDebounceTime = 0;
 unsigned long lastIncr = 0;
 unsigned long lastPrinted = 0;
 
-GameState game_state = GameState(&standard_settings);
+GameState game_state = GameState(&setting_blitz_30s_0);
 #ifdef CHESS_SERIAL_DISPLAY
 SerialDisplay display = SerialDisplay(&Serial);
 #endif // CHESS_SERIAL_DISPLAY
@@ -55,6 +55,12 @@ void setup()
     #ifdef USE_BUZZER
     pinMode(BUZZER_PIN, OUTPUT);
     #endif
+}
+
+void singleBeep(void) {
+    tone(BUZZER_PIN, 662);
+    delay(110);
+    noTone(BUZZER_PIN);
 }
 
 void tripleBeep(void) {
@@ -84,7 +90,7 @@ void handleButtonReads(GameState *gs) {
         digitalWrite(PLAYER2_LED_PIN, LOW);
         #endif
         #ifdef USE_BUZZER
-        tripleBeep();
+        singleBeep();
         #endif
         gs->pause();
     } else if (!digitalRead(PLAYER1_BUTTON_PIN)) {
@@ -105,7 +111,25 @@ void handleButtonReads(GameState *gs) {
 void handleTimerIncr(GameState *gs) {
     unsigned long now = millis();
     if (!gs->paused) {
-        gs->player_states[gs->whoseTurn].remainingMillis -= (now - lastIncr);
+        if (gs->curr_player_state->gracePeriodMillis > 0) {
+            gs->curr_player_state->gracePeriodMillis -= min(
+                (now - lastIncr),
+                (gs->curr_player_state->gracePeriodMillis)
+            );
+        } else {
+            gs->curr_player_state->remainingMillis -= min(
+                (now - lastIncr),
+                (gs->curr_player_state->remainingMillis)
+            );
+            if (gs->curr_player_state->remainingMillis == 0) {
+                gs->curr_player_state->outOfTime = true;
+                #ifdef USE_BUZZER
+                if (gs->settings->flagBeep) {
+                    tripleBeep();
+                }
+                #endif // USE_BUZZER
+            }
+        }
     }
     lastIncr = now;
 }
@@ -119,7 +143,4 @@ void loop()
         display.renderGameState(&game_state);
         lastPrinted = now;
     }
-    
-    #ifdef USE_LEDS
-    #endif
 }

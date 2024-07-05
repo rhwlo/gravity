@@ -2,6 +2,12 @@
 #define GAME_STATE_H
 
 #include "common.h"
+#include <EEPROM.h>
+
+
+#define VALIDATION_BYTE_0 0xE4
+#define VALIDATION_BYTE_1 0xC5
+#define GAME_SETTINGS_LEN 4
 
 struct player_settings_t
 {
@@ -16,6 +22,11 @@ struct game_settings_t
     bool warningBeep;   // warn when we cross a threshold
     bool flagBeep;      // beep when a player runs out of time
 };
+
+int write_setting_to_eeprom(game_settings_t *game_settings, EEPROMClass *eeprom, int eeprom_offset);
+int write_validation_to_eeprom(EEPROMClass *eeprom, int eeprom_offset);
+int read_setting_from_eeprom(game_settings_t *game_settings, EEPROMClass *eeprom, int eeprom_offset);
+bool read_validation_from_eeprom(EEPROMClass *eeprom, int eeprom_offset);
 
 struct player_state_t {
     bool outOfTime;
@@ -36,6 +47,8 @@ class GameState {
 };
 
 extern game_settings_t setting_blitz_5m_0, standard_settings, setting_blitz_30s_0, setting_blitz_5m_3s;
+extern game_settings_t game_settings[GAME_SETTINGS_LEN];
+extern uint8_t selected_game_settings;
 
 
 #endif  // GAME_STATE_H

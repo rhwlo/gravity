@@ -1,15 +1,13 @@
 #ifndef DISPLAY_H
 #define DISPLAY_H
 
-#include "game_state.h"
-#ifndef ARDUINO
-#define ARDUINO 100 
-#endif  // ARDUINO
 #include <Adafruit_SSD1306.h>
+#include "game_state.h"
 
 class ChessDisplay {
     public:
         virtual void renderGameState(GameState *game_state);
+        virtual void begin(void);
 };
 
 class SerialDisplay : public ChessDisplay {

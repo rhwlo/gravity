@@ -1,13 +1,10 @@
 #include <Arduino.h>
-#ifndef ARDUINO
-#define ARDUINO 100
-#endif
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <Wire.h>
 
-#include "game_state.h"
 #include "display.h"
+#include "game_state.h"
 
 #define CHESS_OLED_DISPLAY
 #define USE_LEDS

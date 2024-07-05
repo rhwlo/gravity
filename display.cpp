@@ -1,7 +1,7 @@
-#include "display.h"
-#include "chess_time.h"
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+#include "common.h"
+#include "display.h"
 
 
 SerialDisplay::SerialDisplay(Stream *s) {

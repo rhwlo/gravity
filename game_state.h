@@ -1,11 +1,7 @@
 #ifndef GAME_STATE_H
 #define GAME_STATE_H
 
-#include "chess_time.h"
-
-#define NUM_PLAYERS     2   // because it's chess
-#define PLAYER_WHITE    0
-#define PLAYER_BLACK    1
+#include "common.h"
 
 struct player_settings_t
 {
@@ -30,7 +26,6 @@ struct player_state_t {
 class GameState {
     public:
         GameState(game_settings_t *game_settings);
-        // ~GameState(void);
         bool setTurn(unsigned short newTurn);
         bool paused;
         void pause(void);

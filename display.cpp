@@ -115,31 +115,32 @@ void SSD1306Display::prettyPrintTime(unsigned long time) {
 
 
 void SSD1306Display::renderGameState(GameState *game_state) {
+    uint16_t white_fg, white_bg;
     display->clearDisplay();
-    display->setTextColor(SSD1306_WHITE);
     display->setCursor(0,0);
     display->setTextSize(2);
     if (game_state->whoseTurn == PLAYER_WHITE) {
-        display->print("White");
+        white_fg = SSD1306_BLACK;
+        white_bg = SSD1306_WHITE;
     } else {
-        display->print("Black");
+        white_fg = SSD1306_WHITE;
+        white_bg = SSD1306_BLACK;
     }
-    display->setTextSize(1);
-    display->setCursor(display->getCursorX(), display->getCursorY() + 6);
-    if (game_state->curr_player_state->outOfTime) {
-        display->println(" out of time");
+    display->fillRect(0, 0, 128, 16, white_bg);
+    display->setTextColor(white_fg);
+    if (game_state->player_states[PLAYER_WHITE].outOfTime) {
+        display->println("0:00:00 !");
     } else {
-        display->println(" to move");
+        prettyPrintTime(game_state->player_states[PLAYER_WHITE].remainingMillis);
     }
     display->println();
-    if (game_state->paused) {
-        display->setTextSize(2);
-        display->println(("PAUSED"));
+    display->fillRect(display->getCursorX(), display->getCursorY(), 128, 16, white_fg);
+    display->setTextColor(white_bg);
+    if (game_state->player_states[PLAYER_BLACK].outOfTime) {
+        display->println("0:00:00 !");
     } else {
-        display->setTextSize(2);
-        display->println();
+        prettyPrintTime(game_state->player_states[PLAYER_BLACK].remainingMillis);
     }
-    display->setTextSize(3);
-    prettyPrintTime(game_state->player_states[game_state->whoseTurn].remainingMillis);
+    display->println();
     display->display();
 }

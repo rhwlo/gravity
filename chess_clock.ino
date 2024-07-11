@@ -3,7 +3,7 @@
 #include <Adafruit_SSD1306.h>
 #include <Wire.h>
 
-#include "display.h"
+#include "display_ssd.h"
 #include "game_state.h"
 
 #define CHESS_OLED_DISPLAY
@@ -33,8 +33,7 @@ GameState game_state = GameState(&setting_blitz_30s_0);
 SerialDisplay display = SerialDisplay(&Serial);
 #endif // CHESS_SERIAL_DISPLAY
 #ifdef CHESS_OLED_DISPLAY
-Adafruit_SSD1306 sdisplay(128, 64, &Wire, -1);
-SSD1306Display display(&sdisplay);
+SSD1306Display display;
 #endif // CHESS_OLED_DISPLAY
 
 void setup()

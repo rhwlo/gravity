@@ -18,8 +18,6 @@ class LCDDisplay : public ChessDisplay {
         void begin(void);
         void renderGameState(GameState *game_state);
     private:
-        void prettyPrintTime(LCD_I2C *lcd, unsigned long time);
-        void printChar(LCD_I2C *lcd, char c, uint8_t col, uint8_t row);
         LCD_I2C player_1, player_2;
         char last_displayed[2][ROWS][COLS];
 };

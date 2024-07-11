@@ -5,6 +5,11 @@
 #include "game_state.h"
 #include "display_common.h"
 
+#define CHAR_DOT    '.'
+#define BLANK_CHAR  0xFE
+#define COLS        16
+#define ROWS        2
+
 class LCDDisplay : public ChessDisplay {
     public:
         LCDDisplay(uint8_t addr_1, uint8_t addr_2);
@@ -14,6 +19,7 @@ class LCDDisplay : public ChessDisplay {
         void prettyPrintTime(LCD_I2C *lcd, unsigned long time);
         void printChar(LCD_I2C *lcd, char c, uint8_t col, uint8_t row);
         LCD_I2C player_1, player_2;
+        char last_displayed[2][ROWS][COLS];
 };
 
 #endif // DISPLAY_LCD_H

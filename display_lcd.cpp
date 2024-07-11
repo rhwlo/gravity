@@ -2,6 +2,7 @@
 #include "game_state.h"
 #include "display_lcd.h"
 
+// Real Bold digits courtesy of https://github.com/upiir/character_display_big_digits
 const uint8_t real_bold_digits[10][4] = {
     { 0xFE, 0xFE, 0x03, 0x02 },
     { 0xFE, 0x05, 0xFE, 0x05 },
@@ -16,8 +17,14 @@ const uint8_t real_bold_digits[10][4] = {
 };
 
 LCDDisplay::LCDDisplay(uint8_t addr_1, uint8_t addr_2) :
-    player_1(addr_1, 16, 2),
-    player_2(addr_2, 16, 2) {
+    player_1(addr_1, COLS, ROWS),
+    player_2(addr_2, COLS, ROWS) {
+    for (uint8_t i = 0; i < ROWS; i++) {
+        for (uint8_t j = 0; j < COLS; i++) {
+            last_displayed[0][i][j] = BLANK_CHAR;
+            last_displayed[1][i][j] = BLANK_CHAR;
+        }
+    }
 }
 
 void LCDDisplay::begin(void) {
@@ -153,7 +160,48 @@ char charForDigit(uint8_t i) {
     }
 }
 
-// TODO: rework this to load a buffer so that we can write this in a single pass
+void pushDigit(char buffer[ROWS][COLS], uint8_t digit, uint8_t x_offset, uint8_t y_offset) {
+    if (digit > 0 && digit < 9) {
+        buffer[y_offset][x_offset] = real_bold_digits[digit][0];
+        buffer[y_offset + 1][x_offset] = real_bold_digits[digit][1];
+        buffer[y_offset][x_offset + 1] = real_bold_digits[digit][2];
+        buffer[y_offset + 1][x_offset + 1] = real_bold_digits[digit][3];
+    }
+}
+
+void makeDisplayBuffer(char buffer[ROWS][COLS], unsigned long time) {
+    unsigned long rt = time;
+    uint8_t digit;
+
+    buffer[0][2] = CHAR_DOT;
+    buffer[1][2] = CHAR_DOT;
+    buffer[0][7] = CHAR_DOT;
+    buffer[1][7] = CHAR_DOT;
+
+    // hours
+    digit = (uint8_t) (rt / HOUR_MILLIS) % 10;
+    rt %= HOUR_MILLIS;
+    pushDigit(buffer, digit, 0, 0);
+
+    // tens of minutes
+    digit = (uint8_t) (rt / MINUTE_MILLIS * 10) % 10;
+    rt %= (MINUTE_MILLIS * 10);
+    pushDigit(buffer, digit, 3, 0);
+    // units of minutes
+    digit = (uint8_t) (rt / MINUTE_MILLIS) % 10;
+    rt %= (MINUTE_MILLIS);
+    pushDigit(buffer, digit, 5, 0);
+
+    // tens of seconds
+    digit = (uint8_t) (rt / SECOND_MILLIS * 10) % 10;
+    rt %= (SECOND_MILLIS * 10);
+    pushDigit(buffer, digit, 3, 0);
+    // units of seconds
+    digit = (uint8_t) (rt / SECOND_MILLIS) % 10;
+    rt %= (SECOND_MILLIS);
+    pushDigit(buffer, digit, 3, 0);
+}
+
 void LCDDisplay::prettyPrintTime(LCD_I2C *lcd, unsigned long time) {
     unsigned long remaining_time = time;
     if (remaining_time >= HOUR_MILLIS) {
@@ -191,6 +239,56 @@ void LCDDisplay::prettyPrintTime(LCD_I2C *lcd, unsigned long time) {
     }
 }
 
-void LCDDisplay::renderGameState(GameState *game_state) {
+bool displayBuffersDiffer(char buf1[ROWS][COLS], char buf2[ROWS][COLS]) {
+    uint8_t i, j;
+    for (i = 0; i < ROWS; i++) {
+        for (j = 0; j < COLS; j++) {
+            if (buf1[i][j] != buf2[i][j]) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
 
+void applyDisplayBuffer(LCD_I2C *lcd, char buffer[ROWS][COLS]) {
+    uint8_t i, j;
+    for (i = 0; i < ROWS; i++) {
+        lcd->setCursor(0, i);
+        for (j = 0; j < COLS; j++) {
+            lcd->write(buffer[i][j]);
+        }
+    }
+}
+
+void LCDDisplay::renderGameState(GameState *game_state) {
+    char new_buffers[2][ROWS][COLS];
+    uint8_t i, j;
+    for (i = 0; i < ROWS; i++) {
+        for (j = 0; j < ROWS; j++) {
+            new_buffers[0][i][j] = BLANK_CHAR;
+            new_buffers[1][i][j] = BLANK_CHAR;
+        }
+    }
+
+    if (!game_state->player_states[0].outOfTime) {
+        makeDisplayBuffer(new_buffers[0], game_state->player_states[0].remainingMillis);
+    } else {
+        strcpy(new_buffers[0][0], "out of time");
+    }
+    if (displayBuffersDiffer(new_buffers[0], last_displayed[0])) {
+        applyDisplayBuffer(&player_1, new_buffers[0]);
+        memcpy(last_displayed[0], new_buffers[0], ROWS * COLS * sizeof(new_buffers[0][0][0]));
+    }
+
+    if (!game_state->player_states[1].outOfTime) {
+        makeDisplayBuffer(new_buffers[1], game_state->player_states[1].remainingMillis);
+    } else {
+        strcpy(new_buffers[1][0], "out of time");
+    }
+
+    if (displayBuffersDiffer(new_buffers[1], last_displayed[1])) {
+        applyDisplayBuffer(&player_2, new_buffers[1]);
+        memcpy(last_displayed[1], new_buffers[1], ROWS * COLS * sizeof(new_buffers[0][0][0]));
+    }
 }

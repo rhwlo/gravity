@@ -5,10 +5,12 @@
 #include "game_state.h"
 #include "display_common.h"
 
-#define CHAR_DOT    '.'
-#define BLANK_CHAR  0xFE
-#define COLS        16
-#define ROWS        2
+#define CHAR_DOT            '.'
+#define CHAR_COLON_TOP      ' '
+#define CHAR_COLON_BOTTOM   ':'
+#define CHAR_BLANK          ' '
+#define COLS                16
+#define ROWS                2
 
 class LCDDisplay : public ChessDisplay {
     public:

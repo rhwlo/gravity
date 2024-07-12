@@ -2,18 +2,17 @@
 #include "game_state.h"
 #include "display_lcd.h"
 
-// Real Bold digits courtesy of https://github.com/upiir/character_display_big_digits
-const uint8_t real_bold_digits[10][4] = {
-    { 0x20, 0x20, 0x03, 0x02 },
-    { 0x20, 0x05, 0xFE, 0x05 },
-    { 0x00, 0x02, 0x03, 0x01 },
-    { 0x00, 0x02, 0x01, 0x02 },
-    { 0x07, 0x01, 0x20, 0x05 },
-    { 0x07, 0x00, 0x01, 0x02 },
-    { 0x07, 0x00, 0x06, 0x02 },
-    { 0x00, 0x04, 0x20, 0x05 },
-    { 0x03, 0x02, 0x03, 0x02 },
-    { 0x03, 0x02, 0x01, 0x04 }
+const uint8_t font_digits[10][4] = {
+    DIGIT_0_MAP,
+    DIGIT_1_MAP,
+    DIGIT_2_MAP,
+    DIGIT_3_MAP,
+    DIGIT_4_MAP,
+    DIGIT_5_MAP,
+    DIGIT_6_MAP,
+    DIGIT_7_MAP,
+    DIGIT_8_MAP,
+    DIGIT_9_MAP
 };
 
 LCDDisplay::LCDDisplay(uint8_t addr_1, uint8_t addr_2) :
@@ -34,10 +33,10 @@ void LCDDisplay::begin(void) {
 
 void pushDigit(char buffer[ROWS][COLS], uint8_t digit, uint8_t x_offset, uint8_t y_offset) {
     if (digit >= 0 && digit <= 9) {
-        buffer[y_offset][x_offset] = real_bold_digits[digit][0];
-        buffer[y_offset][x_offset + 1] = real_bold_digits[digit][1];
-        buffer[y_offset + 1][x_offset] = real_bold_digits[digit][2];
-        buffer[y_offset + 1][x_offset + 1] = real_bold_digits[digit][3];
+        buffer[y_offset][x_offset] = font_digits[digit][0];
+        buffer[y_offset][x_offset + 1] = font_digits[digit][1];
+        buffer[y_offset + 1][x_offset] = font_digits[digit][2];
+        buffer[y_offset + 1][x_offset + 1] = font_digits[digit][3];
     }
 }
 

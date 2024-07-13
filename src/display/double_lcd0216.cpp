@@ -19,7 +19,7 @@ LCDDisplay::LCDDisplay(uint8_t addr_1, uint8_t addr_2) :
     player_1(addr_1, COLS, ROWS),
     player_2(addr_2, COLS, ROWS) {
     for (uint8_t i = 0; i < ROWS; i++) {
-        for (uint8_t j = 0; j < COLS; i++) {
+        for (uint8_t j = 0; j < COLS; j++) {
             last_displayed[0][i][j] = CHAR_BLANK;
             last_displayed[1][i][j] = CHAR_BLANK;
         }
@@ -28,7 +28,18 @@ LCDDisplay::LCDDisplay(uint8_t addr_1, uint8_t addr_2) :
 
 void LCDDisplay::begin(void) {
     player_1.begin();
+    player_1.clear();
+    player_1.setCursor(0, 0);
+    player_1.print("  player 1");
     player_2.begin();
+    player_2.clear();
+    player_2.setCursor(0, 0);
+    player_2.print("  player 2");
+    delay(1000);
+    player_1.clear();
+    player_1.setCursor(0, 0);
+    player_2.clear();
+    player_2.setCursor(0, 0);
 }
 
 void pushDigit(char buffer[ROWS][COLS], uint8_t digit, uint8_t x_offset, uint8_t y_offset) {
@@ -99,7 +110,7 @@ void LCDDisplay::renderGameState(GameState *game_state) {
     char new_buffers[2][ROWS][COLS];
     uint8_t i, j;
     for (i = 0; i < ROWS; i++) {
-        for (j = 0; j < ROWS; j++) {
+        for (j = 0; j < COLS; j++) {
             new_buffers[0][i][j] = CHAR_BLANK;
             new_buffers[1][i][j] = CHAR_BLANK;
         }

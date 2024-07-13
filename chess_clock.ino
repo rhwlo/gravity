@@ -6,7 +6,7 @@
 #include "src/game_state.h"
 #include "src/display.h"
 
-#define USE_DISPLAY             DISPLAY_SINGLE_OLED
+#define USE_DISPLAY             DISPLAY_DOUBLE_LCD
 #define USE_LEDS
 #define USE_BUZZER
 

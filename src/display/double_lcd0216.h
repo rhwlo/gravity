@@ -8,7 +8,7 @@
 #define CHAR_DOT            '.'
 #define CHAR_COLON_TOP      '.'
 #define CHAR_COLON_BOTTOM   B10100101
-#define CHAR_BLANK          0xFE
+#define CHAR_BLANK          ' '
 #define COLS                16
 #define ROWS                2
 

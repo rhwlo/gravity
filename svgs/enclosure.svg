@@ -24,16 +24,16 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
      showgrid="false"
-     showguides="true"
-     inkscape:zoom="1.4142136"
-     inkscape:cx="301.58103"
-     inkscape:cy="800.44485"
+     showguides="false"
+     inkscape:zoom="2.0000001"
+     inkscape:cx="206.74999"
+     inkscape:cy="472.99999"
      inkscape:window-width="1440"
      inkscape:window-height="787"
      inkscape:window-x="53"
      inkscape:window-y="25"
      inkscape:window-maximized="0"
-     inkscape:current-layer="g16">
+     inkscape:current-layer="layer1">
     <inkscape:grid
        id="grid1"
        units="mm"
@@ -424,5 +424,10 @@
            r="1.6" />
       </g>
     </g>
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.038;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+       d="m 18,103 v 31 h 71 v -31 z"
+       id="path2"
+       sodipodi:nodetypes="ccccc" />
   </g>
 </svg>

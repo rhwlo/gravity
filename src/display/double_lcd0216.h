@@ -2,8 +2,8 @@
 #define DISPLAY_LCD_H
 
 #include <LCD_I2C.h>
-#include "game_state.h"
-#include "display_common.h"
+#include "../game_state.h"
+#include "../display.h"
 
 #define CHAR_DOT            '.'
 #define CHAR_COLON_TOP      '.'
@@ -16,6 +16,10 @@
 #define FONT_CLASSIC        2 
 #define FONT_DASHED_BOLD    3
 #define FONT                FONT_REAL_BOLD
+
+
+#define PCF8574_ADDR_0      0x27        // no jumpers are soldered
+#define PCF8574_ADDR_1      0x26        // A0 jumper is soldered
 
 
 // Typefaces are courtesy of https://github.com/upiir/character_display_big_digits

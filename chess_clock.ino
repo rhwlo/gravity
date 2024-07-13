@@ -3,10 +3,10 @@
 #include <Adafruit_SSD1306.h>
 #include <Wire.h>
 
-#include "display_ssd.h"
-#include "game_state.h"
+#include "src/game_state.h"
+#include "src/display.h"
 
-#define CHESS_OLED_DISPLAY
+#define USE_DISPLAY             DISPLAY_SINGLE_OLED
 #define USE_LEDS
 #define USE_BUZZER
 
@@ -29,12 +29,22 @@ unsigned long lastIncr = 0;
 unsigned long lastPrinted = 0;
 
 GameState game_state = GameState(&setting_blitz_30s_0);
-#ifdef CHESS_SERIAL_DISPLAY
+#if USE_DISPLAY == DISPLAY_SERIAL
+
+#include "src/display/serial.h"
 SerialDisplay display = SerialDisplay(&Serial);
-#endif // CHESS_SERIAL_DISPLAY
-#ifdef CHESS_OLED_DISPLAY
+
+#elif USE_DISPLAY == DISPLAY_SINGLE_OLED
+
+#include "src/display/single_ssd.h"
 SSD1306Display display;
-#endif // CHESS_OLED_DISPLAY
+
+#elif USE_DISPLAY == DISPLAY_DOUBLE_LCD
+
+#include "src/display/double_lcd0216.h"
+
+LCDDisplay display(PCF8574_ADDR_0, PCF8574_ADDR_1);
+#endif
 
 void setup()
 {

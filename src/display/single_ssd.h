@@ -2,8 +2,8 @@
 #define DISPLAY_SSD_H
 
 #include <Adafruit_SSD1306.h>
-#include "game_state.h"
-#include "display_common.h"
+#include "../game_state.h"
+#include "../display.h"
 
 class SSD1306Display : public ChessDisplay {
     public:

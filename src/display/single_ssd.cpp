@@ -1,8 +1,8 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <Wire.h>
-#include "display_common.h"
-#include "display_ssd.h"
+#include "../display.h"
+#include "single_ssd.h"
 
 SSD1306Display::SSD1306Display(void) :
     ssd(128, 64, &Wire, -1) {

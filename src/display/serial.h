@@ -2,8 +2,8 @@
 #define DISPLAY_SERIAL_H
 
 #include <Arduino.h>
-#include "game_state.h"
-#include "display_common.h"
+#include "../game_state.h"
+#include "../display.h"
 
 
 class SerialDisplay : public ChessDisplay {

@@ -1,6 +1,6 @@
 #include <LCD_I2C.h>
-#include "game_state.h"
-#include "display_lcd.h"
+#include "../game_state.h"
+#include "double_lcd0216.h"
 
 const uint8_t font_digits[10][4] = {
     DIGIT_0_MAP,

@@ -49,21 +49,21 @@ void SerialDisplay::renderGameState(GameState *game_state) {
     }
     if (game_state->player_states[0].outOfTime || game_state->player_states[1].outOfTime) {
         serial->print("Out of time: ");
-        if (game_state->player_states[PLAYER_WHITE].outOfTime) {
+        if (game_state->player_states[PLAYER_1].outOfTime) {
             serial->print("W ");
         }
-        if (game_state->player_states[PLAYER_WHITE].outOfTime) {
+        if (game_state->player_states[PLAYER_1].outOfTime) {
             serial->print("B ");
         }
         serial->println();
     }
-    if (game_state->whoseTurn == PLAYER_WHITE) {
+    if (game_state->whoseTurn == PLAYER_1) {
         serial->println("White to move");
-        prettyPrintTime(game_state->player_states[PLAYER_WHITE].remainingMillis);
+        prettyPrintTime(game_state->player_states[PLAYER_1].remainingMillis);
         serial->println();
     } else {
         serial->println("Black to move");
-        prettyPrintTime(game_state->player_states[PLAYER_BLACK].remainingMillis);
+        prettyPrintTime(game_state->player_states[PLAYER_2].remainingMillis);
         serial->println();
     }
 }

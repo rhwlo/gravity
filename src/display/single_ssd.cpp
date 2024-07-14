@@ -54,7 +54,7 @@ void SSD1306Display::renderGameState(GameState *game_state) {
     ssd.clearDisplay();
     ssd.setCursor(0,0);
     ssd.setTextSize(2);
-    if (game_state->whoseTurn == PLAYER_WHITE) {
+    if (game_state->whoseTurn == PLAYER_1) {
         white_fg = SSD1306_BLACK;
         white_bg = SSD1306_WHITE;
     } else {
@@ -63,18 +63,18 @@ void SSD1306Display::renderGameState(GameState *game_state) {
     }
     ssd.fillRect(0, 0, 128, 16, white_bg);
     ssd.setTextColor(white_fg);
-    if (game_state->player_states[PLAYER_WHITE].outOfTime) {
+    if (game_state->player_states[PLAYER_1].outOfTime) {
         ssd.println("0:00:00 !");
     } else {
-        prettyPrintTime(game_state->player_states[PLAYER_WHITE].remainingMillis);
+        prettyPrintTime(game_state->player_states[PLAYER_1].remainingMillis);
     }
     ssd.println();
     ssd.fillRect(ssd.getCursorX(), ssd.getCursorY(), 128, 16, white_fg);
     ssd.setTextColor(white_bg);
-    if (game_state->player_states[PLAYER_BLACK].outOfTime) {
+    if (game_state->player_states[PLAYER_2].outOfTime) {
         ssd.println("0:00:00 !");
     } else {
-        prettyPrintTime(game_state->player_states[PLAYER_BLACK].remainingMillis);
+        prettyPrintTime(game_state->player_states[PLAYER_2].remainingMillis);
     }
     ssd.println();
     ssd.display();

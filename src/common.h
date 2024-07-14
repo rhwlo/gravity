@@ -6,8 +6,8 @@
 #define SECOND_MILLIS   1000
 
 #define NUM_PLAYERS     2   // because it's chess
-#define PLAYER_WHITE    0
-#define PLAYER_BLACK    1
+#define PLAYER_1        0
+#define PLAYER_2        1
 
 
 #endif  // CHESS_COMMON_H

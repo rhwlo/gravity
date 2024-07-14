@@ -8,6 +8,9 @@
 #define USE_LEDS
 #define USE_BUZZER
 
+#ifdef USE_BUZZER
+#include "buzzer.h"
+#endif
 
 // pins
 #define PLAYER1_BUTTON_PIN      A0
@@ -15,10 +18,8 @@
 #define PLAYER2_BUTTON_PIN      A1
 #define PLAYER2_LED_PIN         5
 #define PAUSE_BUTTON_PIN        A2
-#define BUZZER_PIN              9
 
 #define LED_HIGH                128
-#define BUZZER_TONE             662  // Eb
 #define DEBOUNCE_DELAY          50
 #define PRINT_INTERVAL          500
 
@@ -61,25 +62,6 @@ void setup()
     #endif
 }
 
-void singleBeep(void) {
-    tone(BUZZER_PIN, 662);
-    delay(110);
-    noTone(BUZZER_PIN);
-}
-
-void tripleBeep(void) {
-    tone(BUZZER_PIN, 662);
-    delay(110);
-    noTone(BUZZER_PIN);
-    delay(40);
-    tone(BUZZER_PIN, 662);
-    delay(110);
-    noTone(BUZZER_PIN);
-    delay(40);
-    tone(BUZZER_PIN, 662);
-    delay(110);
-    noTone(BUZZER_PIN);
-}
 
 void handleButtonReads(GameState *gs) {
     unsigned long now = millis();
@@ -98,13 +80,13 @@ void handleButtonReads(GameState *gs) {
         #endif
         gs->pause();
     } else if (!digitalRead(PLAYER1_BUTTON_PIN)) {
-        gs->setTurn(PLAYER_BLACK);
+        gs->setTurn(PLAYER_1);
         #ifdef USE_LEDS
         analogWrite(PLAYER1_LED_PIN, 0);
         analogWrite(PLAYER2_LED_PIN, LED_HIGH);
         #endif
     } else if (!digitalRead(PLAYER2_BUTTON_PIN)) {
-        gs->setTurn(PLAYER_WHITE);
+        gs->setTurn(PLAYER_2);
         #ifdef USE_LEDS
         analogWrite(PLAYER1_LED_PIN, LED_HIGH);
         analogWrite(PLAYER2_LED_PIN, 0);

@@ -29,13 +29,26 @@ LCDDisplay::LCDDisplay(uint8_t addr_1, uint8_t addr_2) :
 void LCDDisplay::begin(void) {
     player_1.begin();
     player_1.clear();
-    player_1.setCursor(0, 0);
-    player_1.print("  player 1");
     player_2.begin();
     player_2.clear();
-    player_2.setCursor(0, 0);
-    player_2.print("  player 2");
-    delay(1000);
+    // ideally, we wouldn't have to program the special characters each time, but oh well
+    player_1.createChar(0, special_00);
+    player_2.createChar(0, special_00);
+    player_1.createChar(1, special_01);
+    player_2.createChar(1, special_01);
+    player_1.createChar(2, special_02);
+    player_2.createChar(2, special_02);
+    player_1.createChar(3, special_03);
+    player_2.createChar(3, special_03);
+    player_1.createChar(4, special_04);
+    player_2.createChar(4, special_04);
+    player_1.createChar(5, special_05);
+    player_2.createChar(5, special_05);
+    player_1.createChar(6, special_06);
+    player_2.createChar(6, special_06);
+    player_1.createChar(7, special_07);
+    player_2.createChar(7, special_07);
+    delay(500);
     player_1.clear();
     player_1.setCursor(0, 0);
     player_2.clear();

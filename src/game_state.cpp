@@ -163,3 +163,24 @@ void write_settings_to_eeprom(EEPROMClass *eeprom) {
         eeprom_offset += write_setting_to_eeprom(&game_settings[i], eeprom, eeprom_offset);
     }
 }
+
+bool read_all_settings_from_eeprom(EEPROMClass *eeprom) {
+    int eeprom_offset = 0;
+
+    if (!read_validation_from_eeprom(eeprom, eeprom_offset)) {
+        return false;
+    }
+    eeprom_offset += 2;
+
+    selected_game_settings = eeprom->read(eeprom_offset);
+    eeprom_offset++;
+
+    for (int i = 0; i < GAME_SETTINGS_LEN; i++) {
+        eeprom_offset += read_setting_from_eeprom(
+            &game_settings[i],
+            eeprom,
+            eeprom_offset
+        );
+    }
+    return true;
+}

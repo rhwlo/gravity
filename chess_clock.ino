@@ -14,20 +14,21 @@
 
 // pins
 #define PLAYER1_BUTTON_PIN      A0
-#define PLAYER1_LED_PIN         6
+#define PLAYER1_LED_PIN         5
 #define PLAYER2_BUTTON_PIN      A1
-#define PLAYER2_LED_PIN         5
-#define PAUSE_BUTTON_PIN        A2
+#define PLAYER2_LED_PIN         6
+#define PAUSE_BUTTON_PIN        A3
 
-#define LED_HIGH                128
-#define DEBOUNCE_DELAY          50
+#define LED_LOW                 220
+#define DEBOUNCE_DELAY          100
 #define PRINT_INTERVAL          500
 
 unsigned long lastDebounceTime = 0;
 unsigned long lastIncr = 0;
 unsigned long lastPrinted = 0;
+uint8_t centerButtonPresses = 0;
 
-GameState game_state = GameState(&setting_blitz_30s_0);
+GameState game_state = GameState(&game_settings[selected_game_settings]);
 #if USE_DISPLAY == DISPLAY_SERIAL
 
 #include "src/display/serial.h"
@@ -54,8 +55,8 @@ void setup()
     #ifdef USE_LEDS
     pinMode(PLAYER1_LED_PIN, OUTPUT);
     pinMode(PLAYER2_LED_PIN, OUTPUT);
-    digitalWrite(PLAYER1_LED_PIN, LOW);
-    digitalWrite(PLAYER2_LED_PIN, LOW);
+    analogWrite(PLAYER1_LED_PIN, 255);
+    analogWrite(PLAYER2_LED_PIN, 255);
     #endif
     #ifdef USE_BUZZER
     pinMode(BUZZER_PIN, OUTPUT);
@@ -71,26 +72,45 @@ void handleButtonReads(GameState *gs) {
     lastDebounceTime = now;
 
     if (!digitalRead(PAUSE_BUTTON_PIN)) {
-        #ifdef USE_LEDS
-        digitalWrite(PLAYER1_LED_PIN, LOW);
-        digitalWrite(PLAYER2_LED_PIN, LOW);
-        #endif
-        #ifdef USE_BUZZER
-        singleBeep();
-        #endif
-        gs->pause();
+        centerButtonPresses++;
+        if (!gs->paused) {
+            gs->pause();
+            centerButtonPresses = 1;
+            #ifdef USE_LEDS
+            analogWrite(PLAYER1_LED_PIN, 255);
+            analogWrite(PLAYER2_LED_PIN, 255);
+            #endif
+            #ifdef USE_BUZZER
+            singleBeep();
+            #endif
+        } else {
+            if (centerButtonPresses == 3) {
+                gs->reset();
+            } else if (centerButtonPresses == 5) {
+                selected_game_settings++;
+                selected_game_settings %= GAME_SETTINGS_LEN;
+                gs->settings = &(game_settings[selected_game_settings]);
+                gs->reset();
+            }
+        }
     } else if (!digitalRead(PLAYER1_BUTTON_PIN)) {
-        gs->setTurn(PLAYER_1);
-        #ifdef USE_LEDS
-        analogWrite(PLAYER1_LED_PIN, 0);
-        analogWrite(PLAYER2_LED_PIN, LED_HIGH);
-        #endif
+        if (gs->paused || gs->curr_player_state == &(gs->player_states[0])) {
+            centerButtonPresses = 0;
+            gs->setTurn(PLAYER_2);
+            #ifdef USE_LEDS
+            analogWrite(PLAYER1_LED_PIN, 255);
+            analogWrite(PLAYER2_LED_PIN, LED_LOW);
+            #endif
+        }
     } else if (!digitalRead(PLAYER2_BUTTON_PIN)) {
-        gs->setTurn(PLAYER_2);
-        #ifdef USE_LEDS
-        analogWrite(PLAYER1_LED_PIN, LED_HIGH);
-        analogWrite(PLAYER2_LED_PIN, 0);
-        #endif
+        if (gs->paused || gs->curr_player_state == &(gs->player_states[1])) {
+            centerButtonPresses = 0;
+            gs->setTurn(PLAYER_1);
+            #ifdef USE_LEDS
+            analogWrite(PLAYER1_LED_PIN, LED_LOW);
+            analogWrite(PLAYER2_LED_PIN, 255);
+            #endif
+        }
     }
 }
 

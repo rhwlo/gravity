@@ -16,6 +16,21 @@ GameState::GameState(game_settings_t *game_settings) {
     }
 }
 
+void GameState::reset(void) {
+    paused = true;
+    whoseTurn = 0;
+    settings = game_settings;
+    curr_player_state = &(player_states[whoseTurn]);
+
+    for (int i = 0; i < NUM_PLAYERS; i++) {
+        player_states[i] = {
+            false,
+            game_settings->player_settings[i].totalMillis,
+            game_settings->player_settings[i].gracePeriodMillis,
+        };
+    }
+}
+
 bool GameState::setTurn(unsigned short newTurn) {
     if (newTurn >= NUM_PLAYERS) {
         return false;       // this would be an error if we did those
@@ -35,6 +50,7 @@ bool GameState::setTurn(unsigned short newTurn) {
     return true;
 }
 
+
 void GameState::pause(void) {
     paused = true;
 }
@@ -53,7 +69,8 @@ game_settings_t setting_blitz_5m_0 = {
         },
     },
     false,                      // warning beep
-    false                       // flag beep
+    false,                      // flag beep
+    true                        // turn beep
 };
 
 game_settings_t setting_blitz_5m_3s = {
@@ -70,7 +87,8 @@ game_settings_t setting_blitz_5m_3s = {
         },
     },
     false,                      // warning beep
-    false                       // flag beep
+    false,                      // flag beep
+    true                        // turn beep
 };
 
 game_settings_t setting_blitz_30s_0 = {
@@ -87,7 +105,8 @@ game_settings_t setting_blitz_30s_0 = {
         },
     },
     false,                      // warning beep
-    true                        // flag beep
+    true,                       // flag beep
+    true                        // turn beep
 };
 
 game_settings_t standard_settings = {
@@ -104,7 +123,8 @@ game_settings_t standard_settings = {
         },
     },
     false,                      // warning beep
-    false                       // flag beep
+    false,                      // flag beep
+    false                       // turn beep
 };
 
 int write_validation_to_eeprom(EEPROMClass *eeprom, int eeprom_offset) {
@@ -151,7 +171,7 @@ game_settings_t game_settings[GAME_SETTINGS_LEN] = {
     standard_settings,
 };
 
-uint8_t selected_game_settings = 0;
+uint8_t selected_game_settings = 1;
 
 void write_settings_to_eeprom(EEPROMClass *eeprom) {
     int eeprom_offset = 0;

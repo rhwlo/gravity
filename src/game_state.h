@@ -21,6 +21,7 @@ struct game_settings_t
     player_settings_t player_settings[NUM_PLAYERS];
     bool warningBeep;   // warn when we cross a threshold
     bool flagBeep;      // beep when a player runs out of time
+    bool turnBeep;      // beep when we change whose turn it is
 };
 
 int write_setting_to_eeprom(game_settings_t *game_settings, EEPROMClass *eeprom, int eeprom_offset);
@@ -40,6 +41,7 @@ class GameState {
         bool setTurn(unsigned short newTurn);
         bool paused;
         void pause(void);
+        void reset(void);
         unsigned short whoseTurn;
         player_state_t player_states[NUM_PLAYERS];
         player_state_t *curr_player_state;

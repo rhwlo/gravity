@@ -96,15 +96,15 @@ void handlePauseButton(GameState *gs, int buttonState, unsigned long now) {
         if (buttonPresses[CENTER_IDX] == 3) {
             gs->reset();
             #ifdef USE_BUZZER
-            singleBeep();
+            chirpFifth();
             #endif
-        } else if (buttonPresses[CENTER_IDX] >= 5) {
+        } else if (buttonPresses[CENTER_IDX] >= 4) {
             selected_game_settings++;
             selected_game_settings %= GAME_SETTINGS_LEN;
             gs->settings = &(all_game_settings[selected_game_settings]);
             gs->reset();
             #ifdef USE_BUZZER
-            doubleBeep();
+            chirpFifth();
             #endif
         }
     } // else { } // handle button pressed?

@@ -19,14 +19,13 @@ GameState::GameState(game_settings_t *game_settings) {
 void GameState::reset(void) {
     paused = true;
     whoseTurn = 0;
-    settings = game_settings;
     curr_player_state = &(player_states[whoseTurn]);
 
     for (int i = 0; i < NUM_PLAYERS; i++) {
         player_states[i] = {
             false,
-            game_settings->player_settings[i].totalMillis,
-            game_settings->player_settings[i].gracePeriodMillis,
+            settings->player_settings[i].totalMillis,
+            settings->player_settings[i].gracePeriodMillis,
         };
     }
 }
@@ -164,7 +163,7 @@ int read_setting_from_eeprom(game_settings_t *game_settings, EEPROMClass *eeprom
     return i;
 }
 
-game_settings_t game_settings[GAME_SETTINGS_LEN] = {
+game_settings_t all_game_settings[GAME_SETTINGS_LEN] = {
     setting_blitz_30s_0,
     setting_blitz_5m_0,
     setting_blitz_5m_3s,
@@ -180,7 +179,7 @@ void write_settings_to_eeprom(EEPROMClass *eeprom) {
     eeprom_offset++;
     
     for (int i = 0; i < GAME_SETTINGS_LEN; i++) {
-        eeprom_offset += write_setting_to_eeprom(&game_settings[i], eeprom, eeprom_offset);
+        eeprom_offset += write_setting_to_eeprom(&all_game_settings[i], eeprom, eeprom_offset);
     }
 }
 
@@ -197,7 +196,7 @@ bool read_all_settings_from_eeprom(EEPROMClass *eeprom) {
 
     for (int i = 0; i < GAME_SETTINGS_LEN; i++) {
         eeprom_offset += read_setting_from_eeprom(
-            &game_settings[i],
+            &all_game_settings[i],
             eeprom,
             eeprom_offset
         );

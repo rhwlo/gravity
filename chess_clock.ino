@@ -23,12 +23,17 @@
 #define DEBOUNCE_DELAY          100
 #define PRINT_INTERVAL          500
 
-unsigned long lastDebounceTime = 0;
+#define PLAYER1_IDX 0
+#define PLAYER2_IDX 1
+#define CENTER_IDX  2
+
+unsigned long lastDebounceTime[3] = {0, 0, 0};
+int lastState[3] = {HIGH, HIGH, HIGH};
+byte buttonPresses[3] = {0, 0, 0};
 unsigned long lastIncr = 0;
 unsigned long lastPrinted = 0;
-uint8_t centerButtonPresses = 0;
 
-GameState game_state = GameState(&game_settings[selected_game_settings]);
+GameState game_state = GameState(&all_game_settings[selected_game_settings]);
 #if USE_DISPLAY == DISPLAY_SERIAL
 
 #include "src/display/serial.h"
@@ -63,19 +68,22 @@ void setup()
     #endif
 }
 
-
-void handleButtonReads(GameState *gs) {
-    unsigned long now = millis();
-    if ((now - lastDebounceTime) < DEBOUNCE_DELAY) {
+void handlePauseButton(GameState *gs, int buttonState, unsigned long now) {
+    if (now - lastDebounceTime[CENTER_IDX] < DEBOUNCE_DELAY) {
         return;
     }
-    lastDebounceTime = now;
-
-    if (!digitalRead(PAUSE_BUTTON_PIN)) {
-        centerButtonPresses++;
+    if (buttonState == lastState[CENTER_IDX]) {
+        return;
+    }
+    lastState[CENTER_IDX] = buttonState;
+    lastDebounceTime[CENTER_IDX] = now;
+    if (buttonState == HIGH) {
+        // handle pause button released
+        buttonPresses[CENTER_IDX]++;
+        // if we aren't paused, then pause
         if (!gs->paused) {
             gs->pause();
-            centerButtonPresses = 1;
+            buttonPresses[CENTER_IDX] = 1;
             #ifdef USE_LEDS
             analogWrite(PLAYER1_LED_PIN, 255);
             analogWrite(PLAYER2_LED_PIN, 255);
@@ -83,35 +91,84 @@ void handleButtonReads(GameState *gs) {
             #ifdef USE_BUZZER
             singleBeep();
             #endif
-        } else {
-            if (centerButtonPresses == 3) {
-                gs->reset();
-            } else if (centerButtonPresses == 5) {
-                selected_game_settings++;
-                selected_game_settings %= GAME_SETTINGS_LEN;
-                gs->settings = &(game_settings[selected_game_settings]);
-                gs->reset();
-            }
+            return;
         }
-    } else if (!digitalRead(PLAYER1_BUTTON_PIN)) {
+        if (buttonPresses[CENTER_IDX] == 3) {
+            gs->reset();
+            #ifdef USE_BUZZER
+            singleBeep();
+            #endif
+        } else if (buttonPresses[CENTER_IDX] >= 5) {
+            selected_game_settings++;
+            selected_game_settings %= GAME_SETTINGS_LEN;
+            gs->settings = &(all_game_settings[selected_game_settings]);
+            gs->reset();
+            #ifdef USE_BUZZER
+            doubleBeep();
+            #endif
+        }
+    } // else { } // handle button pressed?
+}
+
+void handlePlayer1Button(GameState *gs, int buttonState, unsigned long now) {
+    if (now - lastDebounceTime[PLAYER1_IDX] < DEBOUNCE_DELAY) {
+        return;
+    }
+    if (buttonState == lastState[PLAYER1_IDX]) {
+        return;
+    }
+    lastState[PLAYER1_IDX] = buttonState;
+    lastDebounceTime[PLAYER1_IDX] = now;
+    if (buttonState == HIGH) {
+        // handle released
         if (gs->paused || gs->curr_player_state == &(gs->player_states[0])) {
-            centerButtonPresses = 0;
             gs->setTurn(PLAYER_2);
             #ifdef USE_LEDS
             analogWrite(PLAYER1_LED_PIN, 255);
             analogWrite(PLAYER2_LED_PIN, LED_LOW);
             #endif
+            #ifdef USE_BUZZER
+            if (gs->settings->turnBeep) {
+                singleBeep();
+            }
+            #endif
         }
-    } else if (!digitalRead(PLAYER2_BUTTON_PIN)) {
+    }
+}
+
+
+void handlePlayer2Button(GameState *gs, int buttonState, unsigned long now) {
+    if (now - lastDebounceTime[PLAYER2_IDX] < DEBOUNCE_DELAY) {
+        return;
+    }
+    if (buttonState == lastState[PLAYER2_IDX]) {
+        return;
+    }
+    lastState[PLAYER2_IDX] = buttonState;
+    lastDebounceTime[PLAYER2_IDX] = now;
+    if (buttonState == HIGH) {
+        // handle released
         if (gs->paused || gs->curr_player_state == &(gs->player_states[1])) {
-            centerButtonPresses = 0;
             gs->setTurn(PLAYER_1);
             #ifdef USE_LEDS
             analogWrite(PLAYER1_LED_PIN, LED_LOW);
             analogWrite(PLAYER2_LED_PIN, 255);
             #endif
+            #ifdef USE_BUZZER
+            if (gs->settings->turnBeep) {
+                singleBeep();
+            }
+            #endif
         }
     }
+}
+
+void handleButtonReads(GameState *gs) {
+    unsigned long now = millis();
+
+    handlePauseButton(gs, digitalRead(PAUSE_BUTTON_PIN), now);
+    handlePlayer1Button(gs, digitalRead(PLAYER1_BUTTON_PIN), now);
+    handlePlayer2Button(gs, digitalRead(PLAYER2_BUTTON_PIN), now);
 }
 
 void handleTimerIncr(GameState *gs) {

@@ -49,7 +49,7 @@ class GameState {
 };
 
 extern game_settings_t setting_blitz_5m_0, standard_settings, setting_blitz_30s_0, setting_blitz_5m_3s;
-extern game_settings_t game_settings[GAME_SETTINGS_LEN];
+extern game_settings_t all_game_settings[GAME_SETTINGS_LEN];
 extern uint8_t selected_game_settings;
 
 

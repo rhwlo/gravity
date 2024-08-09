@@ -94,7 +94,64 @@ void pushDigit(char buffer[ROWS][COLS], uint8_t digit, uint8_t x_offset, uint8_t
     }
 }
 
-void makeDisplayBuffer(char buffer[2][16], unsigned long time) {
+void makeSettingsDisplayBuffer(char buffer[2][16], uint8_t player_number, game_settings_t *gs) {
+    // Display settings like "00h30m00s   +00s"
+    //                       "g=00s     -w-f-t"
+    static const char default_buffer[2][16] = {
+        {'0','0','h','0','0','m','0','0','s',' ',' ',' ','+','0','0','s'},
+        {'g','=','0','0','s',' ',' ',' ',' ',' ','-','w','-','f','-','t'}
+    };
+    memcpy(buffer, default_buffer, 2 * 16 * sizeof(default_buffer[0][0]));
+    uint8_t hours=(gs->player_settings[player_number].totalMillis / 1000 / 3600) % 100,
+        minutes=(gs->player_settings[player_number].totalMillis / 1000 / 60) % 60,
+        seconds=(gs->player_settings[player_number].totalMillis / 1000) % 60,
+        grace_seconds=gs->player_settings[player_number].gracePeriodMillis / 1000,
+        incr_seconds=gs->player_settings[player_number].perTurnIncrMillis / 1000;
+    byte beeps = (gs->warningBeep ? 0b100 : 0b000)
+               | (gs->flagBeep ? 0b010 : 0b000)
+               | (gs->turnBeep ? 0b001 : 0b000);
+    if (hours / 10) {
+        buffer[0][0] += (char) (hours / 10);
+    }
+    if (hours % 10) {
+        buffer[0][1] += (char) (hours % 10);
+    }
+    if (minutes / 10) {
+        buffer[0][3] += (char) (minutes / 10);
+    }
+    if (minutes % 10) {
+        buffer[0][4] += (char) (minutes % 10);
+    }
+    if (seconds / 10) {
+        buffer[0][6] += (char) (seconds / 10);
+    }
+    if (seconds % 10) {
+        buffer[0][7] += (char) (seconds % 10);
+    }
+    if (incr_seconds / 10) {
+        buffer[0][13] += (char) (incr_seconds / 10);
+    }
+    if (incr_seconds % 10) {
+        buffer[0][14] += (char) (incr_seconds % 10);
+    }
+    if (grace_seconds / 10) {
+        buffer[1][2] += (char) (grace_seconds / 10);
+    }
+    if (grace_seconds % 10) {
+        buffer[1][3] += (char) (grace_seconds % 10);
+    }
+    if (beeps & 0b100) {
+        buffer[1][11] = '+';
+    }
+    if (beeps & 0b010) {
+        buffer[1][13] = '+';
+    }
+    if (beeps & 0b001) {
+        buffer[1][15] = '+';
+    }
+}
+
+void makeTimeDisplayBuffer(char buffer[2][16], unsigned long time) {
     unsigned long rt = time;
     uint8_t digit;
 
@@ -159,22 +216,26 @@ void LCDDisplay::renderGameState(GameState *game_state) {
         }
     }
 
-    if (!game_state->player_states[0].outOfTime) {
-        makeDisplayBuffer(new_buffers[0], game_state->player_states[0].remainingMillis);
+    if (game_state->clock_mode == SELECT_SETTINGS) {
+        makeSettingsDisplayBuffer(new_buffers[0], 0, game_state->settings);
+        makeSettingsDisplayBuffer(new_buffers[1], 1, game_state->settings);
     } else {
-        strcpy(new_buffers[0][0], "out of time");
+        if (!game_state->player_states[0].outOfTime) {
+            makeTimeDisplayBuffer(new_buffers[0], game_state->player_states[0].remainingMillis);
+        } else {
+            strcpy(new_buffers[0][0], "out of time");
+        }
+        if (!game_state->player_states[1].outOfTime) {
+            makeTimeDisplayBuffer(new_buffers[1], game_state->player_states[1].remainingMillis);
+        } else {
+            strcpy(new_buffers[1][0], "out of time");
+        }
     }
+
     if (displayBuffersDiffer(new_buffers[0], last_displayed[0])) {
         applyDisplayBuffer(&player_1, last_displayed[0], new_buffers[0]);
         memcpy(last_displayed[0], new_buffers[0], ROWS * COLS * sizeof(new_buffers[0][0][0]));
     }
-
-    if (!game_state->player_states[1].outOfTime) {
-        makeDisplayBuffer(new_buffers[1], game_state->player_states[1].remainingMillis);
-    } else {
-        strcpy(new_buffers[1][0], "out of time");
-    }
-
     if (displayBuffersDiffer(new_buffers[1], last_displayed[1])) {
         applyDisplayBuffer(&player_2, last_displayed[1], new_buffers[1]);
         memcpy(last_displayed[1], new_buffers[1], ROWS * COLS * sizeof(new_buffers[0][0][0]));

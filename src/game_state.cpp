@@ -2,7 +2,7 @@
 
 
 GameState::GameState(game_settings_t *game_settings) {
-    paused = true;
+    clock_mode = PAUSED;
     whoseTurn = 0;
     settings = game_settings;
     curr_player_state = &(player_states[whoseTurn]);
@@ -17,7 +17,7 @@ GameState::GameState(game_settings_t *game_settings) {
 }
 
 void GameState::reset(void) {
-    paused = true;
+    clock_mode = PAUSED;
     whoseTurn = 0;
     curr_player_state = &(player_states[whoseTurn]);
 
@@ -35,13 +35,12 @@ bool GameState::setTurn(unsigned short newTurn) {
         return false;       // this would be an error if we did those
     }
     // unpause, regardless of whether we're changing turns
-    paused = false;
+    clock_mode = ACTIVE;
     if (newTurn == whoseTurn) {
         return true;        // setting the turn to the current player just unpauses
     }
     whoseTurn = newTurn;
     curr_player_state = &(player_states[whoseTurn]);
-    paused = false;
     if (!curr_player_state->outOfTime) {
         curr_player_state->gracePeriodMillis = settings->player_settings[whoseTurn].gracePeriodMillis;
         curr_player_state->remainingMillis += settings->player_settings[whoseTurn].perTurnIncrMillis;
@@ -51,7 +50,7 @@ bool GameState::setTurn(unsigned short newTurn) {
 
 
 void GameState::pause(void) {
-    paused = true;
+    clock_mode = PAUSED;
 }
 
 game_settings_t setting_blitz_5m_0 = {

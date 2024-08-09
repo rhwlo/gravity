@@ -9,6 +9,12 @@
 #define VALIDATION_BYTE_1 0xC5
 #define GAME_SETTINGS_LEN 4
 
+enum clock_mode_t {
+    PAUSED,
+    ACTIVE,
+    SELECT_SETTINGS
+};
+
 struct player_settings_t
 {
     unsigned long  totalMillis;
@@ -39,7 +45,7 @@ class GameState {
     public:
         GameState(game_settings_t *game_settings);
         bool setTurn(unsigned short newTurn);
-        bool paused;
+        clock_mode_t clock_mode;
         void pause(void);
         void reset(void);
         unsigned short whoseTurn;

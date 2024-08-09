@@ -81,7 +81,7 @@ void handlePauseButton(GameState *gs, int buttonState, unsigned long now) {
         // handle pause button released
         buttonPresses[CENTER_IDX]++;
         // if we aren't paused, then pause
-        if (!gs->paused) {
+        if (!gs->clock_mode == PAUSED) {
             gs->pause();
             buttonPresses[CENTER_IDX] = 1;
             #ifdef USE_LEDS
@@ -99,6 +99,7 @@ void handlePauseButton(GameState *gs, int buttonState, unsigned long now) {
             chirpFifth();
             #endif
         } else if (buttonPresses[CENTER_IDX] >= 4) {
+            gs->clock_mode = SELECT_SETTINGS;
             selected_game_settings++;
             selected_game_settings %= GAME_SETTINGS_LEN;
             gs->settings = &(all_game_settings[selected_game_settings]);
@@ -121,7 +122,7 @@ void handlePlayer1Button(GameState *gs, int buttonState, unsigned long now) {
     lastDebounceTime[PLAYER1_IDX] = now;
     if (buttonState == HIGH) {
         // handle released
-        if (gs->paused || gs->curr_player_state == &(gs->player_states[0])) {
+        if (gs->clock_mode == PAUSED || gs->curr_player_state == &(gs->player_states[0])) {
             gs->setTurn(PLAYER_2);
             #ifdef USE_LEDS
             analogWrite(PLAYER1_LED_PIN, 255);
@@ -148,7 +149,7 @@ void handlePlayer2Button(GameState *gs, int buttonState, unsigned long now) {
     lastDebounceTime[PLAYER2_IDX] = now;
     if (buttonState == HIGH) {
         // handle released
-        if (gs->paused || gs->curr_player_state == &(gs->player_states[1])) {
+        if (gs->clock_mode == PAUSED || gs->curr_player_state == &(gs->player_states[1])) {
             gs->setTurn(PLAYER_1);
             #ifdef USE_LEDS
             analogWrite(PLAYER1_LED_PIN, LED_LOW);
@@ -174,7 +175,7 @@ void handleButtonReads(GameState *gs) {
 void handleTimerIncr(GameState *gs) {
     unsigned long now = millis();
     bool wasZero = false;
-    if (!gs->paused) {
+    if (gs->clock_mode != PAUSED) {
         if (gs->curr_player_state->gracePeriodMillis > 0) {
             gs->curr_player_state->gracePeriodMillis -= min(
                 (now - lastIncr),

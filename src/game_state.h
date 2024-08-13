@@ -24,10 +24,8 @@ struct game_settings_t
     bool turnBeep;      // beep when we change whose turn it is
 };
 
-int write_setting_to_eeprom(game_settings_t *game_settings, EEPROMClass *eeprom, int eeprom_offset);
-int write_validation_to_eeprom(EEPROMClass *eeprom, int eeprom_offset);
-int read_setting_from_eeprom(game_settings_t *game_settings, EEPROMClass *eeprom, int eeprom_offset);
-bool read_validation_from_eeprom(EEPROMClass *eeprom, int eeprom_offset);
+void write_state_to_eeprom(EEPROMClass *eeprom);
+bool read_state_from_eeprom(EEPROMClass *eeprom);
 
 struct player_state_t {
     bool outOfTime;

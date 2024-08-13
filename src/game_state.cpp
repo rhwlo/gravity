@@ -172,18 +172,27 @@ game_settings_t all_game_settings[GAME_SETTINGS_LEN] = {
 
 uint8_t selected_game_settings = 1;
 
-void write_settings_to_eeprom(EEPROMClass *eeprom) {
+/* Write the settings state to EEPROM. This includes:
+   1. the two-byte validation code (0xE4C5)
+   2. one byte of the uint8_t selected_game_settings;
+   3. the contents of all stored game settings  */
+void write_state_to_eeprom(EEPROMClass *eeprom) {
     int eeprom_offset = 0;
+    
+    // Write validation
     eeprom_offset += write_validation_to_eeprom(eeprom, eeprom_offset);
+
+    // Write the index of the currently-selected game settings
     eeprom->write(eeprom_offset, selected_game_settings);
     eeprom_offset++;
     
+    // Write the contents of all the settings
     for (int i = 0; i < GAME_SETTINGS_LEN; i++) {
         eeprom_offset += write_setting_to_eeprom(&all_game_settings[i], eeprom, eeprom_offset);
     }
 }
 
-bool read_all_settings_from_eeprom(EEPROMClass *eeprom) {
+bool read_state_from_eeprom(EEPROMClass *eeprom) {
     int eeprom_offset = 0;
 
     if (!read_validation_from_eeprom(eeprom, eeprom_offset)) {

@@ -67,6 +67,7 @@ void setup()
     #ifdef USE_BUZZER
     pinMode(BUZZER_PIN, OUTPUT);
     #endif
+    read_state_from_eeprom(&EEPROM);
 }
 
 /* handlePauseButton returns true if it modifies any state, false otherwise. */
@@ -98,6 +99,8 @@ bool handlePauseButton(GameState *gs, int buttonState, unsigned long now) {
         #endif
         return true;
     }
+
+    // If the button has been hit three times, then reset
     if (buttonPresses[CENTER_IDX] == 3) {
         gs->reset();
         #ifdef USE_BUZZER
@@ -105,14 +108,16 @@ bool handlePauseButton(GameState *gs, int buttonState, unsigned long now) {
         #endif
         return true;
     }
+
+    // If the button has been hit 3+ times, then cycle to the next settings
     if (buttonPresses[CENTER_IDX] >= 4) {
-        selected_game_settings++;
-        selected_game_settings %= GAME_SETTINGS_LEN;
+        selected_game_settings = (selected_game_settings + 1) % GAME_SETTINGS_LEN;
         gs->settings = &(all_game_settings[selected_game_settings]);
         gs->reset();
         #ifdef USE_BUZZER
         beep(BE_SELECT_SETTINGS);
         #endif
+        write_state_to_eeprom(&EEPROM);
         return true;
     }
     return false;
@@ -137,7 +142,7 @@ bool handlePlayerButton(
     }
     // handle released button
 
-    // if the game is paused, or it isn't my turn, then my button does nothing
+    // if the game is not paused, or it isn't my turn, then my button does nothing
     if (!gs->paused && gs->whoseTurn != playerIndex) {
         return false;
     }

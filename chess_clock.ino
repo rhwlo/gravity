@@ -87,7 +87,7 @@ bool handlePauseButton(GameState *gs, int buttonState, unsigned long now) {
     // handle pause button released
     buttonPresses[CENTER_IDX]++;
     // if we aren't paused, then pause
-    if (!gs->paused) {
+    if (!gs->clock_mode == CM_PAUSED) {
         gs->pause();
         buttonPresses[CENTER_IDX] = 1;
         #ifdef USE_LEDS
@@ -102,6 +102,7 @@ bool handlePauseButton(GameState *gs, int buttonState, unsigned long now) {
 
     // If the button has been hit three times, then reset
     if (buttonPresses[CENTER_IDX] == 3) {
+        gs->clock_mode = CM_SELECT_SETTINGS;
         gs->reset();
         #ifdef USE_BUZZER
         beep(BE_RESET);
@@ -111,6 +112,7 @@ bool handlePauseButton(GameState *gs, int buttonState, unsigned long now) {
 
     // If the button has been hit 3+ times, then cycle to the next settings
     if (buttonPresses[CENTER_IDX] >= 4) {
+        gs->clock_mode = CM_SELECT_SETTINGS;
         selected_game_settings = (selected_game_settings + 1) % GAME_SETTINGS_LEN;
         gs->settings = &(all_game_settings[selected_game_settings]);
         gs->reset();
@@ -143,7 +145,7 @@ bool handlePlayerButton(
     // handle released button
 
     // if the game is not paused, or it isn't my turn, then my button does nothing
-    if (!gs->paused && gs->whoseTurn != playerIndex) {
+    if (gs->clock_mode != CM_PAUSED && gs->whoseTurn != playerIndex) {
         return false;
     }
 
@@ -174,7 +176,7 @@ bool handlePlayer1Button(GameState *gs, int buttonState, unsigned long now) {
     lastDebounceTime[PLAYER1_IDX] = now;
     if (buttonState == HIGH) {
         // handle released
-        if (gs->paused || gs->curr_player_state == &(gs->player_states[0])) {
+        if (gs->clock_mode == CM_PAUSED || gs->curr_player_state == &(gs->player_states[0])) {
             gs->setTurn(PLAYER_2);
             #ifdef USE_LEDS
             analogWrite(PLAYER1_LED_PIN, 255);
@@ -202,7 +204,7 @@ void handlePlayer2Button(GameState *gs, int buttonState, unsigned long now) {
     lastDebounceTime[PLAYER2_IDX] = now;
     if (buttonState == HIGH) {
         // handle released
-        if (gs->paused || gs->curr_player_state == &(gs->player_states[1])) {
+        if (gs->clock_mode == CM_PAUSED || gs->curr_player_state == &(gs->player_states[1])) {
             gs->setTurn(PLAYER_1);
             #ifdef USE_LEDS
             analogWrite(PLAYER1_LED_PIN, LED_LOW);
@@ -228,7 +230,7 @@ bool handleButtonReads(GameState *gs, unsigned long now) {
 /* handleTimerIncr returns true if it modifies any counters, false otherwise. */
 bool handleTimerIncr(GameState *gs, unsigned long now) {
     bool countersModified = false;
-    if (gs->paused) {
+    if (gs->clock_mode != CM_PAUSED) {
         return countersModified;
     }
     lastIncr = now;

@@ -22,7 +22,7 @@
 #define LED_LOW                 220
 #define LED_HIGH                255
 #define DEBOUNCE_DELAY          100
-#define PRINT_INTERVAL          500
+#define PRINT_INTERVAL          200
 
 #define PLAYER1_IDX 0
 #define PLAYER2_IDX 1

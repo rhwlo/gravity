@@ -255,9 +255,18 @@ bool handleTimerIncr(GameState *gs, unsigned long now) {
 void loop()
 {
     unsigned long now = millis();
-    handleButtonReads(&game_state, now);
-    handleTimerIncr(&game_state, now);
-    if ((now - lastPrinted) >= PRINT_INTERVAL) {
+    // Both handleButtonReads and handleTimerIncr will return true only if they've changed a value
+    // in the game_state object.
+    bool gameModeChanged = handleButtonReads(&game_state, now);
+    bool timersChanged = handleTimerIncr(&game_state, now);
+    // If nothing has changed, we can return early.
+    if (!gameModeChanged && !timersChanged) {
+        return;
+    }
+    // Otherwise, we re-render the display if either:
+    // 1. the game mode has changed (ex., player turn changed), or
+    // 2. the timers have changed, and it's been a PRINT_INTERVAL since our last print
+    if (gameModeChanged || (timersChanged && (now - lastPrinted) >= PRINT_INTERVAL)) {
         display.renderGameState(&game_state);
         lastPrinted = now;
     }

@@ -35,7 +35,6 @@ void chirpSus4(void) {
     noTone(BUZZER_PIN);
 }
 
-
 void tripleBeep(void) {
     tone(BUZZER_PIN, BUZZER_TONE);
     delay(110);
@@ -48,4 +47,26 @@ void tripleBeep(void) {
     tone(BUZZER_PIN, BUZZER_TONE);
     delay(110);
     noTone(BUZZER_PIN);
+}
+
+void beep(beep_event_t event) {
+    switch (event)
+    {
+    case BE_PAUSE:
+    case BE_TURN_CHANGE:
+        singleBeep();
+        return;
+    case BE_SELECT_SETTINGS:
+    case BE_RESET:
+        chirpFifth();
+        return;
+    case BE_FLAG:
+        tripleBeep();
+        return;
+    case BE_WARNING:
+        doubleBeep();
+        return;
+    default:
+        break;
+    }
 }

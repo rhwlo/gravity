@@ -5,10 +5,16 @@
 #define BUZZER_TONE             622  // Eb
 #define BUZZER_TONE_FOURTH      831  // Ab
 #define BUZZER_TONE_FIFTH       932  // Bb
-void singleBeep(void);
-void doubleBeep(void);
-void chirpFifth(void);
-void chirpSus4(void);
-void tripleBeep(void);
+
+enum beep_event_t {
+    BE_FLAG,
+    BE_PAUSE,
+    BE_RESET,
+    BE_SELECT_SETTINGS,
+    BE_TURN_CHANGE,
+    BE_WARNING
+};
+
+void beep(beep_event_t event);
 
 #endif

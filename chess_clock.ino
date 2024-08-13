@@ -20,6 +20,7 @@
 #define PAUSE_BUTTON_PIN        A3
 
 #define LED_LOW                 220
+#define LED_HIGH                255
 #define DEBOUNCE_DELAY          100
 #define PRINT_INTERVAL          500
 
@@ -68,49 +69,96 @@ void setup()
     #endif
 }
 
-void handlePauseButton(GameState *gs, int buttonState, unsigned long now) {
+/* handlePauseButton returns true if it modifies any state, false otherwise. */
+bool handlePauseButton(GameState *gs, int buttonState, unsigned long now) {
     if (now - lastDebounceTime[CENTER_IDX] < DEBOUNCE_DELAY) {
-        return;
+        return false;
     }
     if (buttonState == lastState[CENTER_IDX]) {
-        return;
+        return false;
     }
     lastState[CENTER_IDX] = buttonState;
     lastDebounceTime[CENTER_IDX] = now;
-    if (buttonState == HIGH) {
-        // handle pause button released
-        buttonPresses[CENTER_IDX]++;
-        // if we aren't paused, then pause
-        if (!gs->paused) {
-            gs->pause();
-            buttonPresses[CENTER_IDX] = 1;
-            #ifdef USE_LEDS
-            analogWrite(PLAYER1_LED_PIN, 255);
-            analogWrite(PLAYER2_LED_PIN, 255);
-            #endif
-            #ifdef USE_BUZZER
-            singleBeep();
-            #endif
-            return;
-        }
-        if (buttonPresses[CENTER_IDX] == 3) {
-            gs->reset();
-            #ifdef USE_BUZZER
-            chirpFifth();
-            #endif
-        } else if (buttonPresses[CENTER_IDX] >= 4) {
-            selected_game_settings++;
-            selected_game_settings %= GAME_SETTINGS_LEN;
-            gs->settings = &(all_game_settings[selected_game_settings]);
-            gs->reset();
-            #ifdef USE_BUZZER
-            chirpFifth();
-            #endif
-        }
-    } // else { } // handle button pressed?
+    // For the moment, we don't do anything when the button is pressed -- just when released.
+    if (buttonState == LOW) {
+        return false;
+    }
+    // handle pause button released
+    buttonPresses[CENTER_IDX]++;
+    // if we aren't paused, then pause
+    if (!gs->paused) {
+        gs->pause();
+        buttonPresses[CENTER_IDX] = 1;
+        #ifdef USE_LEDS
+        analogWrite(PLAYER1_LED_PIN, 255);
+        analogWrite(PLAYER2_LED_PIN, 255);
+        #endif
+        #ifdef USE_BUZZER
+        beep(BE_PAUSE);
+        #endif
+        return true;
+    }
+    if (buttonPresses[CENTER_IDX] == 3) {
+        gs->reset();
+        #ifdef USE_BUZZER
+        beep(BE_RESET);
+        #endif
+        return true;
+    }
+    if (buttonPresses[CENTER_IDX] >= 4) {
+        selected_game_settings++;
+        selected_game_settings %= GAME_SETTINGS_LEN;
+        gs->settings = &(all_game_settings[selected_game_settings]);
+        gs->reset();
+        #ifdef USE_BUZZER
+        beep(BE_SELECT_SETTINGS);
+        #endif
+        return true;
+    }
+    return false;
 }
 
-void handlePlayer1Button(GameState *gs, int buttonState, unsigned long now) {
+/* handlePlayerButton returns true if it modifies any state, false otherwise. */
+bool handlePlayerButton(
+    GameState *gs, int buttonState, unsigned long now, uint8_t playerIndex
+) {
+    if (now - lastDebounceTime[playerIndex] < DEBOUNCE_DELAY) {
+        return false;
+    }
+    if (buttonState == lastState[playerIndex]) {
+        return false;
+    }
+    lastState[playerIndex] = buttonState;
+    lastDebounceTime[playerIndex] = now;
+
+    // We don't take action when buttons are pressed, only released
+    if (buttonState == LOW) {
+        return false;
+    }
+    // handle released button
+
+    // if the game is paused, or it isn't my turn, then my button does nothing
+    if (!gs->paused && gs->whoseTurn != playerIndex) {
+        return false;
+    }
+
+    // Otherwise, we change turns.
+    // Use binary XOR against 1 to find the other player's index
+    gs->setTurn(1 ^ playerIndex);
+    #ifdef USE_LEDS
+    analogWrite((playerIndex == PLAYER1_IDX) ? PLAYER1_LED_PIN : PLAYER2_LED_PIN, LED_HIGH);
+    analogWrite((playerIndex == PLAYER1_IDX) ? PLAYER2_LED_PIN : PLAYER1_LED_PIN, LED_LOW);
+    #endif
+    #ifdef USE_BUZZER
+    if (gs->settings->turnBeep) {
+        beep(BE_TURN_CHANGE);
+    }
+    #endif
+    return true;
+}
+
+/*
+bool handlePlayer1Button(GameState *gs, int buttonState, unsigned long now) {
     if (now - lastDebounceTime[PLAYER1_IDX] < DEBOUNCE_DELAY) {
         return;
     }
@@ -135,8 +183,9 @@ void handlePlayer1Button(GameState *gs, int buttonState, unsigned long now) {
         }
     }
 }
+*/
 
-
+/*
 void handlePlayer2Button(GameState *gs, int buttonState, unsigned long now) {
     if (now - lastDebounceTime[PLAYER2_IDX] < DEBOUNCE_DELAY) {
         return;
@@ -162,48 +211,52 @@ void handlePlayer2Button(GameState *gs, int buttonState, unsigned long now) {
         }
     }
 }
+*/
 
-void handleButtonReads(GameState *gs) {
-    unsigned long now = millis();
-
-    handlePauseButton(gs, digitalRead(PAUSE_BUTTON_PIN), now);
-    handlePlayer1Button(gs, digitalRead(PLAYER1_BUTTON_PIN), now);
-    handlePlayer2Button(gs, digitalRead(PLAYER2_BUTTON_PIN), now);
+bool handleButtonReads(GameState *gs, unsigned long now) {
+    return (handlePauseButton(gs, digitalRead(PAUSE_BUTTON_PIN), now)
+        || handlePlayerButton(gs, digitalRead(PLAYER1_BUTTON_PIN), now, PLAYER1_IDX)
+        || handlePlayerButton(gs, digitalRead(PLAYER2_BUTTON_PIN), now, PLAYER2_IDX)
+    );
 }
 
-void handleTimerIncr(GameState *gs) {
-    unsigned long now = millis();
-    bool wasZero = false;
-    if (!gs->paused) {
-        if (gs->curr_player_state->gracePeriodMillis > 0) {
-            gs->curr_player_state->gracePeriodMillis -= min(
-                (now - lastIncr),
-                (gs->curr_player_state->gracePeriodMillis)
-            );
-        } else {
-            wasZero = (gs->curr_player_state->remainingMillis == 0);
-            gs->curr_player_state->remainingMillis -= min(
-                (now - lastIncr),
-                (gs->curr_player_state->remainingMillis)
-            );
-            if (gs->curr_player_state->remainingMillis == 0 && !wasZero) {
-                gs->curr_player_state->outOfTime = true;
-                #ifdef USE_BUZZER
-                if (gs->settings->flagBeep) {
-                    tripleBeep();
-                }
-                #endif // USE_BUZZER
-            }
-        }
+/* handleTimerIncr returns true if it modifies any counters, false otherwise. */
+bool handleTimerIncr(GameState *gs, unsigned long now) {
+    bool countersModified = false;
+    if (gs->paused) {
+        return countersModified;
     }
     lastIncr = now;
+    if (gs->curr_player_state->gracePeriodMillis > 0) {
+        gs->curr_player_state->gracePeriodMillis -= min(
+            (now - lastIncr),
+            (gs->curr_player_state->gracePeriodMillis)
+        );
+        return true;
+    }
+    if (gs->curr_player_state->remainingMillis == 0) {
+        return false;
+    }
+    gs->curr_player_state->remainingMillis -= min(
+        (now - lastIncr),
+        (gs->curr_player_state->remainingMillis)
+    );
+    if (gs->curr_player_state->remainingMillis == 0) {
+        gs->curr_player_state->outOfTime = true;
+        #ifdef USE_BUZZER
+        if (gs->settings->flagBeep) {
+            beep(BE_FLAG);
+        }
+        #endif // USE_BUZZER
+        return true;
+    }
 }
 
 void loop()
 {
     unsigned long now = millis();
-    handleButtonReads(&game_state);
-    handleTimerIncr(&game_state);
+    handleButtonReads(&game_state, now);
+    handleTimerIncr(&game_state, now);
     if ((now - lastPrinted) >= PRINT_INTERVAL) {
         display.renderGameState(&game_state);
         lastPrinted = now;

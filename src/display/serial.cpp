@@ -44,7 +44,7 @@ void SerialDisplay::prettyPrintTime(unsigned long time) {
 }
 
 void SerialDisplay::renderGameState(GameState *game_state) {
-    if (game_state->paused) {
+    if (game_state->clock_mode == CM_PAUSED) {
         serial->println("PAUSED");
     }
     if (game_state->player_states[0].outOfTime || game_state->player_states[1].outOfTime) {

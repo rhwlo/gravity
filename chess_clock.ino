@@ -19,8 +19,15 @@
 #define PLAYER2_LED_PIN         6
 #define PAUSE_BUTTON_PIN        A3
 
-#define LED_LOW                 220
-#define LED_HIGH                255
+// set LED_OFF_HIGH if the LED's non-output wire is wired to 5V rather than ground
+#ifdef LED_OFF_HIGH
+#define LED_OFF_LEVEL           255
+#define LED_ON_LEVEL            220
+#else
+#define LED_OFF_LEVEL           0
+#define LED_ON_LEVEL            35
+#endif
+
 #define DEBOUNCE_DELAY          100
 #define PRINT_INTERVAL          200
 
@@ -61,8 +68,8 @@ void setup()
     #ifdef USE_LEDS
     pinMode(PLAYER1_LED_PIN, OUTPUT);
     pinMode(PLAYER2_LED_PIN, OUTPUT);
-    analogWrite(PLAYER1_LED_PIN, 255);
-    analogWrite(PLAYER2_LED_PIN, 255);
+    analogWrite(PLAYER1_LED_PIN, LED_OFF_LEVEL);
+    analogWrite(PLAYER2_LED_PIN, LED_OFF_LEVEL);
     #endif
     #ifdef USE_BUZZER
     pinMode(BUZZER_PIN, OUTPUT);
@@ -91,8 +98,8 @@ bool handlePauseButton(GameState *gs, int buttonState, unsigned long now) {
         gs->pause();
         buttonPresses[CENTER_IDX] = 1;
         #ifdef USE_LEDS
-        analogWrite(PLAYER1_LED_PIN, 255);
-        analogWrite(PLAYER2_LED_PIN, 255);
+        analogWrite(PLAYER1_LED_PIN, LED_OFF_LEVEL);
+        analogWrite(PLAYER2_LED_PIN, LED_OFF_LEVEL);
         #endif
         #ifdef USE_BUZZER
         beep(BE_PAUSE);
@@ -153,8 +160,8 @@ bool handlePlayerButton(
     // Use binary XOR against 1 to find the other player's index
     gs->setTurn(1 ^ playerIndex);
     #ifdef USE_LEDS
-    analogWrite((playerIndex == PLAYER1_IDX) ? PLAYER1_LED_PIN : PLAYER2_LED_PIN, LED_HIGH);
-    analogWrite((playerIndex == PLAYER1_IDX) ? PLAYER2_LED_PIN : PLAYER1_LED_PIN, LED_LOW);
+    analogWrite((playerIndex == PLAYER1_IDX) ? PLAYER1_LED_PIN : PLAYER2_LED_PIN, LED_OFF_LEVEL);
+    analogWrite((playerIndex == PLAYER1_IDX) ? PLAYER2_LED_PIN : PLAYER1_LED_PIN, LED_ON_LEVEL);
     #endif
     #ifdef USE_BUZZER
     if (gs->settings->turnBeep) {
@@ -179,8 +186,8 @@ bool handlePlayer1Button(GameState *gs, int buttonState, unsigned long now) {
         if (gs->clock_mode == CM_PAUSED || gs->curr_player_state == &(gs->player_states[0])) {
             gs->setTurn(PLAYER_2);
             #ifdef USE_LEDS
-            analogWrite(PLAYER1_LED_PIN, 255);
-            analogWrite(PLAYER2_LED_PIN, LED_LOW);
+            analogWrite(PLAYER1_LED_PIN, LED_OFF_LEVEL);
+            analogWrite(PLAYER2_LED_PIN, LED_ON_LEVEL);
             #endif
             #ifdef USE_BUZZER
             if (gs->settings->turnBeep) {
@@ -207,8 +214,8 @@ void handlePlayer2Button(GameState *gs, int buttonState, unsigned long now) {
         if (gs->clock_mode == CM_PAUSED || gs->curr_player_state == &(gs->player_states[1])) {
             gs->setTurn(PLAYER_1);
             #ifdef USE_LEDS
-            analogWrite(PLAYER1_LED_PIN, LED_LOW);
-            analogWrite(PLAYER2_LED_PIN, 255);
+            analogWrite(PLAYER1_LED_PIN, LED_ON_LEVEL);
+            analogWrite(PLAYER2_LED_PIN, LED_OFF_LEVEL);
             #endif
             #ifdef USE_BUZZER
             if (gs->settings->turnBeep) {

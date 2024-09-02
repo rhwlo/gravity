@@ -157,8 +157,7 @@ bool handlePlayerButton(
     }
 
     // Otherwise, we change turns.
-    // Use binary XOR against 1 to find the other player's index
-    gs->setTurn(1 ^ playerIndex);
+    gs->setTurn((playerIndex == PLAYER1_IDX) ? PLAYER2_IDX : PLAYER1_IDX);
     #ifdef USE_LEDS
     analogWrite((playerIndex == PLAYER1_IDX) ? PLAYER1_LED_PIN : PLAYER2_LED_PIN, LED_OFF_LEVEL);
     analogWrite((playerIndex == PLAYER1_IDX) ? PLAYER2_LED_PIN : PLAYER1_LED_PIN, LED_ON_LEVEL);
@@ -237,25 +236,39 @@ bool handleButtonReads(GameState *gs, unsigned long now) {
 /* handleTimerIncr returns true if it modifies any counters, false otherwise. */
 bool handleTimerIncr(GameState *gs, unsigned long now) {
     bool countersModified = false;
-    if (gs->clock_mode != CM_PAUSED) {
+    if (gs->clock_mode == CM_PAUSED) {
         return countersModified;
     }
+    unsigned long decr = now - lastIncr;
     lastIncr = now;
-    if (gs->curr_player_state->gracePeriodMillis > 0) {
-        gs->curr_player_state->gracePeriodMillis -= min(
-            (now - lastIncr),
-            (gs->curr_player_state->gracePeriodMillis)
-        );
+
+    // If the decrement in time is less than or equal to the remaining grace
+    // period, decrement only the grace period and return true (the counter was
+    // modified)
+    if (gs->curr_player_state->gracePeriodMillis >= decr) {
+        gs->curr_player_state->gracePeriodMillis -= decr;
         return true;
+    } else if (gs->curr_player_state->gracePeriodMillis > 0) {
+        // If the decrement in time is greater than the remaining grace period, subtract
+        // what you can of the decrement, indicate that the counters were modified, and
+        // continue to the next step.
+        decr -= gs->curr_player_state->gracePeriodMillis;
+        gs->curr_player_state->gracePeriodMillis = 0;
+        countersModified = true;
     }
+
+    // if there's no normal time left, return immediately
     if (gs->curr_player_state->remainingMillis == 0) {
-        return false;
-    }
-    gs->curr_player_state->remainingMillis -= min(
-        (now - lastIncr),
-        (gs->curr_player_state->remainingMillis)
-    );
-    if (gs->curr_player_state->remainingMillis == 0) {
+        return countersModified;
+    } else if (gs->curr_player_state->remainingMillis >= decr) {
+        // otherwise, if there's more remaining time than the decrement, decrement it
+        // as usual and return true.
+        gs->curr_player_state->remainingMillis -= decr;
+        return true;
+    } else {
+        // otherwise, if there's less remaining time than the decrement, go the
+        // "out of time" route:
+        gs->curr_player_state->remainingMillis = 0;
         gs->curr_player_state->outOfTime = true;
         #ifdef USE_BUZZER
         if (gs->settings->flagBeep) {

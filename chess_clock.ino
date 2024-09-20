@@ -170,62 +170,6 @@ bool handlePlayerButton(
     return true;
 }
 
-/*
-bool handlePlayer1Button(GameState *gs, int buttonState, unsigned long now) {
-    if (now - lastDebounceTime[PLAYER1_IDX] < DEBOUNCE_DELAY) {
-        return;
-    }
-    if (buttonState == lastState[PLAYER1_IDX]) {
-        return;
-    }
-    lastState[PLAYER1_IDX] = buttonState;
-    lastDebounceTime[PLAYER1_IDX] = now;
-    if (buttonState == HIGH) {
-        // handle released
-        if (gs->clock_mode == CM_PAUSED || gs->curr_player_state == &(gs->player_states[0])) {
-            gs->setTurn(PLAYER_2);
-            #ifdef USE_LEDS
-            analogWrite(PLAYER1_LED_PIN, LED_OFF_LEVEL);
-            analogWrite(PLAYER2_LED_PIN, LED_ON_LEVEL);
-            #endif
-            #ifdef USE_BUZZER
-            if (gs->settings->turnBeep) {
-                singleBeep();
-            }
-            #endif
-        }
-    }
-}
-*/
-
-/*
-void handlePlayer2Button(GameState *gs, int buttonState, unsigned long now) {
-    if (now - lastDebounceTime[PLAYER2_IDX] < DEBOUNCE_DELAY) {
-        return;
-    }
-    if (buttonState == lastState[PLAYER2_IDX]) {
-        return;
-    }
-    lastState[PLAYER2_IDX] = buttonState;
-    lastDebounceTime[PLAYER2_IDX] = now;
-    if (buttonState == HIGH) {
-        // handle released
-        if (gs->clock_mode == CM_PAUSED || gs->curr_player_state == &(gs->player_states[1])) {
-            gs->setTurn(PLAYER_1);
-            #ifdef USE_LEDS
-            analogWrite(PLAYER1_LED_PIN, LED_ON_LEVEL);
-            analogWrite(PLAYER2_LED_PIN, LED_OFF_LEVEL);
-            #endif
-            #ifdef USE_BUZZER
-            if (gs->settings->turnBeep) {
-                singleBeep();
-            }
-            #endif
-        }
-    }
-}
-*/
-
 bool handleButtonReads(GameState *gs, unsigned long now) {
     return (handlePauseButton(gs, digitalRead(PAUSE_BUTTON_PIN), now)
         || handlePlayerButton(gs, digitalRead(PLAYER1_BUTTON_PIN), now, PLAYER1_IDX)

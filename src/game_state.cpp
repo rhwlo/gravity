@@ -2,7 +2,7 @@
 
 
 GameState::GameState(game_settings_t *game_settings) {
-    clock_mode = CM_PAUSED;
+    clock_mode = CM_SELECT_SETTINGS;
     whoseTurn = 0;
     settings = game_settings;
     curr_player_state = &(player_states[whoseTurn]);
@@ -17,7 +17,6 @@ GameState::GameState(game_settings_t *game_settings) {
 }
 
 void GameState::reset(void) {
-    clock_mode = CM_PAUSED;
     whoseTurn = 0;
     curr_player_state = &(player_states[whoseTurn]);
 
@@ -48,10 +47,6 @@ bool GameState::setTurn(unsigned short newTurn) {
     return true;
 }
 
-
-void GameState::pause(void) {
-    clock_mode = CM_PAUSED;
-}
 
 game_settings_t setting_blitz_5m_0 = {
     {

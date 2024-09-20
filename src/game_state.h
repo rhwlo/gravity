@@ -44,7 +44,6 @@ class GameState {
         GameState(game_settings_t *game_settings);
         bool setTurn(unsigned short newTurn);
         clock_mode_t clock_mode;
-        void pause(void);
         void reset(void);
         unsigned short whoseTurn;
         player_state_t player_states[NUM_PLAYERS];

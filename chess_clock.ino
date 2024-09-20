@@ -5,12 +5,8 @@
 #include "src/display.h"
 
 #define USE_DISPLAY             DISPLAY_DOUBLE_LCD
-#define USE_LEDS
-#define USE_BUZZER
 
-#ifdef USE_BUZZER
 #include "buzzer.h"
-#endif
 
 // pins
 #define PLAYER1_BUTTON_PIN      A0
@@ -65,15 +61,11 @@ void setup()
     pinMode(PLAYER2_BUTTON_PIN, INPUT_PULLUP);
     pinMode(PAUSE_BUTTON_PIN,   INPUT_PULLUP);
     display.begin();
-    #ifdef USE_LEDS
     pinMode(PLAYER1_LED_PIN, OUTPUT);
     pinMode(PLAYER2_LED_PIN, OUTPUT);
     analogWrite(PLAYER1_LED_PIN, LED_OFF_LEVEL);
     analogWrite(PLAYER2_LED_PIN, LED_OFF_LEVEL);
-    #endif
-    #ifdef USE_BUZZER
     pinMode(BUZZER_PIN, OUTPUT);
-    #endif
     read_state_from_eeprom(&EEPROM);
 }
 
@@ -93,17 +85,13 @@ bool handlePauseButton(GameState *gs, int buttonState, unsigned long now) {
     }
     // handle pause button released
     buttonPresses[CENTER_IDX]++;
-    // if we aren't paused, then pause
-    if (!gs->clock_mode == CM_PAUSED) {
-        gs->pause();
+    // if we are active, then pause
+    if (gs->clock_mode == CM_ACTIVE) {
+        gs->clock_mode = CM_PAUSED;
         buttonPresses[CENTER_IDX] = 1;
-        #ifdef USE_LEDS
         analogWrite(PLAYER1_LED_PIN, LED_OFF_LEVEL);
         analogWrite(PLAYER2_LED_PIN, LED_OFF_LEVEL);
-        #endif
-        #ifdef USE_BUZZER
         beep(BE_PAUSE);
-        #endif
         return true;
     }
 
@@ -111,9 +99,7 @@ bool handlePauseButton(GameState *gs, int buttonState, unsigned long now) {
     if (buttonPresses[CENTER_IDX] == 3) {
         gs->clock_mode = CM_SELECT_SETTINGS;
         gs->reset();
-        #ifdef USE_BUZZER
         beep(BE_RESET);
-        #endif
         return true;
     }
 
@@ -123,9 +109,7 @@ bool handlePauseButton(GameState *gs, int buttonState, unsigned long now) {
         selected_game_settings = (selected_game_settings + 1) % GAME_SETTINGS_LEN;
         gs->settings = &(all_game_settings[selected_game_settings]);
         gs->reset();
-        #ifdef USE_BUZZER
         beep(BE_SELECT_SETTINGS);
-        #endif
         write_state_to_eeprom(&EEPROM);
         return true;
     }
@@ -158,15 +142,11 @@ bool handlePlayerButton(
 
     // Otherwise, we change turns.
     gs->setTurn((playerIndex == PLAYER1_IDX) ? PLAYER2_IDX : PLAYER1_IDX);
-    #ifdef USE_LEDS
     analogWrite((playerIndex == PLAYER1_IDX) ? PLAYER1_LED_PIN : PLAYER2_LED_PIN, LED_OFF_LEVEL);
     analogWrite((playerIndex == PLAYER1_IDX) ? PLAYER2_LED_PIN : PLAYER1_LED_PIN, LED_ON_LEVEL);
-    #endif
-    #ifdef USE_BUZZER
     if (gs->settings->turnBeep) {
         beep(BE_TURN_CHANGE);
     }
-    #endif
     return true;
 }
 
@@ -214,11 +194,9 @@ bool handleTimerIncr(GameState *gs, unsigned long now) {
         // "out of time" route:
         gs->curr_player_state->remainingMillis = 0;
         gs->curr_player_state->outOfTime = true;
-        #ifdef USE_BUZZER
         if (gs->settings->flagBeep) {
             beep(BE_FLAG);
         }
-        #endif // USE_BUZZER
         return true;
     }
 }

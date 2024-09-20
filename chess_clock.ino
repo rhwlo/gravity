@@ -235,9 +235,10 @@ void loop()
         return;
     }
     // Otherwise, we re-render the display if either:
+    // 0. we haven't rendered the display yet (lastPrinted == 0), or
     // 1. the game mode has changed (ex., player turn changed), or
-    // 2. the timers have changed, and it's been a PRINT_INTERVAL since our last print
-    if (gameModeChanged || (timersChanged && (now - lastPrinted) >= PRINT_INTERVAL)) {
+    // 2. the timers have changed, and it's been a PRINT_INTERVAL since our last render
+    if (lastPrinted == 0 || gameModeChanged || (timersChanged && (now - lastPrinted) >= PRINT_INTERVAL)) {
         display.renderGameState(&game_state);
         lastPrinted = now;
     }

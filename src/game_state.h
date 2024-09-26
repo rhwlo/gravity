@@ -19,13 +19,11 @@ struct player_settings_t
 {
     unsigned long  totalMillis;
     unsigned short perTurnIncrMillis;
-    unsigned short gracePeriodMillis;
 };
 
 struct game_settings_t
 {
     player_settings_t player_settings[NUM_PLAYERS];
-    bool warningBeep;   // warn when we cross a threshold
     bool flagBeep;      // beep when a player runs out of time
     bool turnBeep;      // beep when we change whose turn it is
 };
@@ -36,7 +34,6 @@ bool read_state_from_eeprom(EEPROMClass *eeprom);
 struct player_state_t {
     bool outOfTime;
     unsigned long remainingMillis;
-    unsigned short gracePeriodMillis;
 };
 
 class GameState {

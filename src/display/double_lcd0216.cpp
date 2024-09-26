@@ -96,19 +96,17 @@ void pushDigit(char buffer[ROWS][COLS], uint8_t digit, uint8_t x_offset, uint8_t
 
 void makeSettingsDisplayBuffer(char buffer[2][16], uint8_t player_number, game_settings_t *gs) {
     // Display settings like "00h30m00s   +00s"
-    //                       "g=00s     -w-f-t"
+    //                       "            -f-t"
     static const char default_buffer[2][16] = {
         {'0','0','h','0','0','m','0','0','s',' ',' ',' ','+','0','0','s'},
-        {'g','=','0','0','s',' ',' ',' ',' ',' ','-','w','-','f','-','t'}
+        {' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','-','f','-','t'}
     };
     memcpy(buffer, default_buffer, 2 * 16 * sizeof(default_buffer[0][0]));
     uint8_t hours=(gs->player_settings[player_number].totalMillis / 1000 / 3600) % 100,
         minutes=(gs->player_settings[player_number].totalMillis / 1000 / 60) % 60,
         seconds=(gs->player_settings[player_number].totalMillis / 1000) % 60,
-        grace_seconds=gs->player_settings[player_number].gracePeriodMillis / 1000,
         incr_seconds=gs->player_settings[player_number].perTurnIncrMillis / 1000;
-    byte beeps = (gs->warningBeep ? 0b100 : 0b000)
-               | (gs->flagBeep ? 0b010 : 0b000)
+    byte beeps = (gs->flagBeep ? 0b010 : 0b000)
                | (gs->turnBeep ? 0b001 : 0b000);
     if (hours / 10) {
         buffer[0][0] += (char) (hours / 10);
@@ -133,15 +131,6 @@ void makeSettingsDisplayBuffer(char buffer[2][16], uint8_t player_number, game_s
     }
     if (incr_seconds % 10) {
         buffer[0][14] += (char) (incr_seconds % 10);
-    }
-    if (grace_seconds / 10) {
-        buffer[1][2] += (char) (grace_seconds / 10);
-    }
-    if (grace_seconds % 10) {
-        buffer[1][3] += (char) (grace_seconds % 10);
-    }
-    if (beeps & 0b100) {
-        buffer[1][10] = '+';
     }
     if (beeps & 0b010) {
         buffer[1][12] = '+';

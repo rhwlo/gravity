@@ -10,8 +10,7 @@ GameState::GameState(game_settings_t *game_settings) {
     for (int i = 0; i < NUM_PLAYERS; i++) {
         player_states[i] = {
             false,
-            game_settings->player_settings[i].totalMillis,
-            game_settings->player_settings[i].gracePeriodMillis,
+            game_settings->player_settings[i].totalMillis
         };
     }
 }
@@ -23,8 +22,7 @@ void GameState::reset(void) {
     for (int i = 0; i < NUM_PLAYERS; i++) {
         player_states[i] = {
             false,
-            settings->player_settings[i].totalMillis,
-            settings->player_settings[i].gracePeriodMillis,
+            settings->player_settings[i].totalMillis
         };
     }
 }
@@ -41,7 +39,6 @@ bool GameState::setTurn(unsigned short newTurn) {
     whoseTurn = newTurn;
     curr_player_state = &(player_states[whoseTurn]);
     if (!curr_player_state->outOfTime) {
-        curr_player_state->gracePeriodMillis = settings->player_settings[whoseTurn].gracePeriodMillis;
         curr_player_state->remainingMillis += settings->player_settings[whoseTurn].perTurnIncrMillis;
     }
     return true;
@@ -52,16 +49,13 @@ game_settings_t setting_blitz_5m_0 = {
     {
         {
             5 * MINUTE_MILLIS,  // totalMillis
-            0,                  // perTurnIncrMillis,
-            0                   // gracePeriodMillis
+            0                   // perTurnIncrMillis,
         },
         {
             5 * MINUTE_MILLIS,  // totalMillis
-            0,                  // perTurnIncrMillis,
-            0                   // gracePeriodMillis
+            0                   // perTurnIncrMillis,
         },
     },
-    false,                      // warning beep
     false,                      // flag beep
     true                        // turn beep
 };
@@ -70,16 +64,13 @@ game_settings_t setting_blitz_5m_3s = {
     {
         {
             5 * MINUTE_MILLIS,  // totalMillis
-            3 * SECOND_MILLIS,  // perTurnIncrMillis,
-            0                   // gracePeriodMillis
+            3 * SECOND_MILLIS   // perTurnIncrMillis,
         },
         {
             5 * MINUTE_MILLIS,  // totalMillis
-            3 * SECOND_MILLIS,  // perTurnIncrMillis,
-            0                   // gracePeriodMillis
+            3 * SECOND_MILLIS   // perTurnIncrMillis,
         },
     },
-    false,                      // warning beep
     false,                      // flag beep
     true                        // turn beep
 };
@@ -88,34 +79,28 @@ game_settings_t setting_blitz_30s_0 = {
     {
         {
             30 * SECOND_MILLIS, // totalMillis
-            0,                  // perTurnIncrMillis,
-            0                   // gracePeriodMillis
+            0                   // perTurnIncrMillis,
         },
         {
             30 * SECOND_MILLIS, // totalMillis
-            0,                  // perTurnIncrMillis,
-            0                   // gracePeriodMillis
+            0                   // perTurnIncrMillis,
         },
     },
-    false,                      // warning beep
     true,                       // flag beep
     true                        // turn beep
 };
 
-game_settings_t standard_settings = {
+game_settings_t setting_15m_0 = {
     {
         {
-            45 * MINUTE_MILLIS, // totalMillis
-            0,                  // perTurnIncrMillis,
-            5                   // gracePeriodMillis
+            15 * MINUTE_MILLIS, // totalMillis
+            0                   // perTurnIncrMillis,
         },
         {
-            45 * MINUTE_MILLIS, // totalMillis
-            0,                  // perTurnIncrMillis,
-            5                   // gracePeriodMillis
+            15 * MINUTE_MILLIS, // totalMillis
+            0                   // perTurnIncrMillis,
         },
     },
-    false,                      // warning beep
     false,                      // flag beep
     false                       // turn beep
 };
@@ -161,7 +146,7 @@ game_settings_t all_game_settings[GAME_SETTINGS_LEN] = {
     setting_blitz_30s_0,
     setting_blitz_5m_0,
     setting_blitz_5m_3s,
-    standard_settings,
+    setting_15m_0,
 };
 
 uint8_t selected_game_settings = 1;

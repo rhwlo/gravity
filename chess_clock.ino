@@ -135,15 +135,23 @@ bool handlePlayerButton(
     }
     // handle released button
 
-    // if the game is not paused, or it isn't my turn, then my button does nothing
-    if (gs->clock_mode != CM_PAUSED && gs->whoseTurn != playerIndex) {
+    // if the game is active, and it isn't my turn, then my button does nothing
+    if (gs->clock_mode == CM_ACTIVE && gs->whoseTurn != playerIndex) {
         return false;
     }
 
     // Otherwise, we change turns.
     gs->setTurn((playerIndex == PLAYER1_IDX) ? PLAYER2_IDX : PLAYER1_IDX);
-    analogWrite((playerIndex == PLAYER1_IDX) ? PLAYER1_LED_PIN : PLAYER2_LED_PIN, LED_OFF_LEVEL);
-    analogWrite((playerIndex == PLAYER1_IDX) ? PLAYER2_LED_PIN : PLAYER1_LED_PIN, LED_ON_LEVEL);
+    analogWrite(
+        PLAYER1_LED_PIN,
+        (gs->whoseTurn == PLAYER1_IDX) ? LED_ON_LEVEL : LED_OFF_LEVEL
+    );
+    analogWrite(
+        PLAYER2_LED_PIN,
+        (gs->whoseTurn == PLAYER2_IDX) ? LED_ON_LEVEL : LED_OFF_LEVEL
+    );
+    // Timer starts now!
+    lastIncr = now;
     if (gs->settings->turnBeep) {
         beep(BE_TURN_CHANGE);
     }

@@ -18,8 +18,8 @@
 #define FONT                FONT_REAL_BOLD
 
 
-#define PCF8574_ADDR_0      0x27        // no jumpers are soldered
-#define PCF8574_ADDR_1      0x26        // A0 jumper is soldered
+#define PCF8574_ADDR_0      0x26        // no jumpers are soldered
+#define PCF8574_ADDR_1      0x27        // A0 jumper is soldered
 
 
 // Typefaces are courtesy of https://github.com/upiir/character_display_big_digits

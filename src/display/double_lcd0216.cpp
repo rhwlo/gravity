@@ -141,13 +141,13 @@ void makeSettingsDisplayBuffer(char buffer[2][16], uint8_t player_number, game_s
         buffer[1][3] += (char) (grace_seconds % 10);
     }
     if (beeps & 0b100) {
-        buffer[1][11] = '+';
+        buffer[1][10] = '+';
     }
     if (beeps & 0b010) {
-        buffer[1][13] = '+';
+        buffer[1][12] = '+';
     }
     if (beeps & 0b001) {
-        buffer[1][15] = '+';
+        buffer[1][14] = '+';
     }
 }
 

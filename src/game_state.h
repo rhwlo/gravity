@@ -9,10 +9,22 @@
 #define VALIDATION_BYTE_1 0xC5
 #define GAME_SETTINGS_LEN 4
 
+#define OI_P1_HOURS     0
+#define OI_P1_MINUTES   1
+#define OI_P1_SECONDS   2
+#define OI_P2_HOURS     3
+#define OI_P2_MINUTES   4
+#define OI_P2_SECONDS   5
+#define OI_TURN_SECONDS 6
+#define OI_FLAG_BEEP    7
+#define OI_TURN_BEEP    8
+#define OI_COUNT        9
+
 enum clock_mode_t {
     CM_PAUSED,
     CM_ACTIVE,
-    CM_SELECT_SETTINGS
+    CM_SELECT_SETTINGS,
+    CM_EDIT_SETTINGS
 };
 
 struct player_settings_t
@@ -41,6 +53,7 @@ class GameState {
         GameState(game_settings_t *game_settings);
         bool setTurn(unsigned short newTurn);
         clock_mode_t clock_mode;
+        int option_index;
         void reset(void);
         unsigned short whoseTurn;
         player_state_t player_states[NUM_PLAYERS];

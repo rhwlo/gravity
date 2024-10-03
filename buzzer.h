@@ -12,7 +12,9 @@ enum beep_event_t {
     BE_RESET,
     BE_SELECT_SETTINGS,
     BE_TURN_CHANGE,
-    BE_WARNING
+    BE_WARNING,
+    BE_EDIT_SETTINGS,
+    BE_SAVE_SETTINGS
 };
 
 void beep(beep_event_t event);

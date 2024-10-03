@@ -25,13 +25,15 @@
 #endif
 
 #define DEBOUNCE_DELAY          100
+#define LONG_PRESS_DELAY        1000
 #define PRINT_INTERVAL          200
 
 #define PLAYER1_IDX 0
 #define PLAYER2_IDX 1
 #define CENTER_IDX  2
 
-unsigned long lastDebounceTime[3] = {0, 0, 0};
+unsigned long lastStateChangeTime[3] = {0, 0, 0};
+unsigned long lastStateChange[3] = {0, 0, 0};
 int lastState[3] = {HIGH, HIGH, HIGH};
 byte buttonPresses[3] = {0, 0, 0};
 unsigned long lastIncr = 0;
@@ -71,20 +73,41 @@ void setup()
 
 /* handlePauseButton returns true if it modifies any state, false otherwise. */
 bool handlePauseButton(GameState *gs, int buttonState, unsigned long now) {
-    if (now - lastDebounceTime[CENTER_IDX] < DEBOUNCE_DELAY) {
+    if (now - lastStateChangeTime[CENTER_IDX] < DEBOUNCE_DELAY) {
         return false;
     }
     if (buttonState == lastState[CENTER_IDX]) {
         return false;
     }
     lastState[CENTER_IDX] = buttonState;
-    lastDebounceTime[CENTER_IDX] = now;
+    lastStateChangeTime[CENTER_IDX] = now;
     // For the moment, we don't do anything when the button is pressed -- just when released.
     if (buttonState == LOW) {
         return false;
     }
     // handle pause button released
+
+    // long press
+    if (now - lastStateChangeTime[CENTER_IDX] >= LONG_PRESS_DELAY) {
+        // long press : SELECT_SETTINGS -> EDIT_SETTINGS
+        if (gs->clock_mode == CM_SELECT_SETTINGS) {
+            gs->clock_mode = CM_EDIT_SETTINGS;
+            gs->option_index = 0;
+            buttonPresses[CENTER_IDX] = 0;
+            beep(BE_EDIT_SETTINGS);
+            return true;
+        // long press : EDIT_SETTINGS -> SELECT_SETTINGS
+        } else if (gs->clock_mode == CM_EDIT_SETTINGS) {
+            gs->clock_mode = CM_SELECT_SETTINGS;
+            gs->option_index = -1;
+            buttonPresses[CENTER_IDX] = 0;
+            beep(BE_SAVE_SETTINGS);
+            return true;
+        }
+    }
+    // short press
     buttonPresses[CENTER_IDX]++;
+
     // if we are active, then pause
     if (gs->clock_mode == CM_ACTIVE) {
         gs->clock_mode = CM_PAUSED;
@@ -95,23 +118,30 @@ bool handlePauseButton(GameState *gs, int buttonState, unsigned long now) {
         return true;
     }
 
-    // If the button has been hit three times, then reset
-    if (buttonPresses[CENTER_IDX] == 3) {
+    // If the button has been hit more than twice and we're paused, reset the time
+    // and go to SELECT_SETTINGS mode.
+    if (gs->clock_mode == CM_PAUSED && buttonPresses[CENTER_IDX] > 2) {
         gs->clock_mode = CM_SELECT_SETTINGS;
         gs->reset();
         beep(BE_RESET);
+        buttonPresses[CENTER_IDX] = 0;
         return true;
     }
 
-    // If the button has been hit 3+ times, then cycle to the next settings
-    if (buttonPresses[CENTER_IDX] >= 4) {
-        gs->clock_mode = CM_SELECT_SETTINGS;
+    // If the button has been hit and we're in SELECT_SETTINGS, go to the next setting
+    if (gs->clock_mode == CM_SELECT_SETTINGS) {
         selected_game_settings = (selected_game_settings + 1) % GAME_SETTINGS_LEN;
         gs->settings = &(all_game_settings[selected_game_settings]);
         gs->reset();
         beep(BE_SELECT_SETTINGS);
         write_state_to_eeprom(&EEPROM);
         return true;
+    }
+
+    // If the button has been hit and we're in EDIT_SETTINGS, go to the next option
+    if (gs->clock_mode == CM_EDIT_SETTINGS) {
+        gs->option_index++;
+        gs->option_index %= OI_COUNT;
     }
     return false;
 }
@@ -120,14 +150,14 @@ bool handlePauseButton(GameState *gs, int buttonState, unsigned long now) {
 bool handlePlayerButton(
     GameState *gs, int buttonState, unsigned long now, uint8_t playerIndex
 ) {
-    if (now - lastDebounceTime[playerIndex] < DEBOUNCE_DELAY) {
+    if (now - lastStateChangeTime[playerIndex] < DEBOUNCE_DELAY) {
         return false;
     }
     if (buttonState == lastState[playerIndex]) {
         return false;
     }
     lastState[playerIndex] = buttonState;
-    lastDebounceTime[playerIndex] = now;
+    lastStateChangeTime[playerIndex] = now;
 
     // We don't take action when buttons are pressed, only released
     if (buttonState == LOW) {
@@ -138,6 +168,54 @@ bool handlePlayerButton(
     // if the game is active, and it isn't my turn, then my button does nothing
     if (gs->clock_mode == CM_ACTIVE && gs->whoseTurn != playerIndex) {
         return false;
+    }
+
+    // if we're in settings editing mode, handle that
+    if (gs->clock_mode == CM_EDIT_SETTINGS) {
+        game_settings_t *curr_settings = &all_game_settings[selected_game_settings];
+        switch (gs->option_index)
+        {
+        case -1:
+            return false;
+        case OI_FLAG_BEEP:
+            curr_settings->flagBeep = !curr_settings->flagBeep;
+            return true;
+        case OI_TURN_BEEP:
+            curr_settings->turnBeep = !curr_settings->turnBeep;
+            return true;
+        case OI_P1_HOURS:
+            curr_settings->player_settings[PLAYER1_IDX].totalMillis +=
+                ((playerIndex == PLAYER1_IDX) ? (-1) : (1)) * 3600000;
+            return true;
+        case OI_P2_HOURS:
+            curr_settings->player_settings[PLAYER2_IDX].totalMillis +=
+                ((playerIndex == PLAYER1_IDX) ? (-1) : (1)) * 3600000;
+            return true;
+        case OI_P1_MINUTES:
+            curr_settings->player_settings[PLAYER1_IDX].totalMillis +=
+                ((playerIndex == PLAYER1_IDX) ? (-1) : (1)) * 60000;
+            return true;
+        case OI_P2_MINUTES:
+            curr_settings->player_settings[PLAYER2_IDX].totalMillis +=
+                ((playerIndex == PLAYER1_IDX) ? (-1) : (1)) * 60000;
+            return true;
+        case OI_P1_SECONDS:
+            curr_settings->player_settings[PLAYER1_IDX].totalMillis +=
+                ((playerIndex == PLAYER1_IDX) ? (-1) : (1)) * 1000;
+            return true;
+        case OI_P2_SECONDS:
+            curr_settings->player_settings[PLAYER2_IDX].totalMillis +=
+                ((playerIndex == PLAYER1_IDX) ? (-1) : (1)) * 1000;
+            return true;
+        case OI_TURN_SECONDS:
+            curr_settings->player_settings[PLAYER1_IDX].perTurnIncrMillis +=
+                ((playerIndex == PLAYER1_IDX) ? (-1) : (1)) * 1000;
+            curr_settings->player_settings[PLAYER2_IDX].perTurnIncrMillis +=
+                ((playerIndex == PLAYER1_IDX) ? (-1) : (1)) * 1000;
+            return true;
+        default:
+            return false;
+        }
     }
 
     // Otherwise, we change turns.

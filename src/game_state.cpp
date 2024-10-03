@@ -5,6 +5,7 @@ GameState::GameState(game_settings_t *game_settings) {
     clock_mode = CM_SELECT_SETTINGS;
     whoseTurn = 0;
     settings = game_settings;
+    option_index = -1;
     curr_player_state = &(player_states[whoseTurn]);
 
     for (int i = 0; i < NUM_PLAYERS; i++) {

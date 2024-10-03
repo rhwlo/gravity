@@ -201,14 +201,10 @@ void loop()
     // in the game_state object.
     bool gameModeChanged = handleButtonReads(&game_state, now);
     bool timersChanged = handleTimerIncr(&game_state, now);
-    // If nothing has changed, we can return early.
-    if (!gameModeChanged && !timersChanged) {
-        return;
-    }
-    // Otherwise, we re-render the display if either:
-    // 0. we haven't rendered the display yet (lastPrinted == 0), or
-    // 1. the game mode has changed (ex., player turn changed), or
-    // 2. the timers have changed, and it's been a PRINT_INTERVAL since our last render
+    // We render the display if either:
+    // 1. we haven't rendered the display yet (lastPrinted == 0), or
+    // 2. the game mode has changed (ex., player turn changed), or
+    // 3. the timers have changed, and it's been a PRINT_INTERVAL since our last render
     if (lastPrinted == 0 || gameModeChanged || (timersChanged && (now - lastPrinted) >= PRINT_INTERVAL)) {
         display.renderGameState(&game_state);
         lastPrinted = now;

@@ -168,7 +168,7 @@ bool handleButtonReads(GameState *gs, unsigned long now) {
 /* handleTimerIncr returns true if it modifies any counters, false otherwise. */
 bool handleTimerIncr(GameState *gs, unsigned long now) {
     bool countersModified = false;
-    if (gs->clock_mode == CM_PAUSED) {
+    if (gs->clock_mode != CM_ACTIVE) {
         return countersModified;
     }
     unsigned long decr = now - lastIncr;

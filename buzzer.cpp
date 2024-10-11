@@ -57,9 +57,12 @@ void beep(beep_event_t event) {
         singleBeep();
         return;
     case BE_SELECT_SETTINGS:
+    case BE_RESET:
+        chirpFifth();
+        return;
     case BE_EDIT_SETTINGS:
     case BE_SAVE_SETTINGS:
-    case BE_RESET:
+        chirpFifth();
         chirpFifth();
         return;
     case BE_FLAG:

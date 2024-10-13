@@ -149,6 +149,7 @@ int read_setting_from_eeprom(game_settings_t *game_settings, EEPROMClass *eeprom
 }
 
 
+#ifdef USE_EEPROM
 /* Write the settings state to EEPROM. This includes:
    1. the two-byte validation code (0xE4C5)
    2. one byte of the uint8_t selected_game_settings;
@@ -189,3 +190,12 @@ bool read_state_from_eeprom(EEPROMClass *eeprom) {
     }
     return true;
 }
+#else
+void write_state_to_eeprom(EEPROMClass *eeprom) {
+    return;
+}
+
+bool read_state_from_eeprom(EEPROMClass *eeprom) {
+    return true;
+}
+#endif

@@ -280,7 +280,7 @@ bool handleTimerIncr(GameState *gs, unsigned long now) {
     // if there's no normal time left, return immediately
     if (gs->curr_player_state->remainingMillis == 0) {
         return countersModified;
-    } else if (gs->curr_player_state->remainingMillis >= decr) {
+    } else if (gs->curr_player_state->remainingMillis > decr) {
         // otherwise, if there's more remaining time than the decrement, decrement it
         // as usual and return true.
         gs->curr_player_state->remainingMillis -= decr;
@@ -311,7 +311,8 @@ void loop()
     if (game_state.clock_mode == CM_SELECT_SETTINGS
             || game_state.clock_mode == CM_EDIT_SETTINGS
             || gameModeChanged
-            || (timersChanged && (now - lastPrinted) >= PRINT_INTERVAL)) {
+            || (timersChanged && (now - lastPrinted) >= PRINT_INTERVAL)
+            || (timersChanged && game_state.curr_player_state->remainingMillis == 0)) {
         display.renderGameState(&game_state);
         lastPrinted = now;
     }

@@ -5,6 +5,7 @@
 #define BUZZER_TONE             622  // Eb
 #define BUZZER_TONE_FOURTH      831  // Ab
 #define BUZZER_TONE_FIFTH       932  // Bb
+#define BUZZER_TONE_SEVENTH     1108 // Db
 
 enum beep_event_t {
     BE_FLAG,

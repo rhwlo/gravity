@@ -54,12 +54,16 @@ LCDDisplay::LCDDisplay(uint8_t addr_1, uint8_t addr_2) :
             last_displayed[1][i][j] = CHAR_BLANK;
         }
     }
+    last_cursor_indices[0] = -1;
+    last_cursor_indices[1] = -1;
 }
 
 void LCDDisplay::begin(void) {
     player_1.begin();
+    player_1.noCursor();
     player_1.clear();
     player_2.begin();
+    player_2.noCursor();
     player_2.clear();
     // ideally, we wouldn't have to program the special characters each time, but oh well
     player_1.createChar(0, special_00);
@@ -94,7 +98,7 @@ void pushDigit(char buffer[ROWS][COLS], uint8_t digit, uint8_t x_offset, uint8_t
     }
 }
 
-void makeSettingsDisplayBuffer(char buffer[2][16], uint8_t player_number, game_settings_t *gs) {
+int makeSettingsDisplayBuffer(char buffer[2][16], GameState *state, uint8_t player_number, game_settings_t *gs) {
     // Display settings like "00h30m00s   +00s"
     //                       "            -f-t"
     static const char default_buffer[2][16] = {
@@ -137,6 +141,35 @@ void makeSettingsDisplayBuffer(char buffer[2][16], uint8_t player_number, game_s
     }
     if (beeps & 0b001) {
         buffer[1][14] = '+';
+    }
+    if (state->clock_mode != CM_EDIT_SETTINGS) {
+        return -1;
+    }
+    if (state->option_index == OI_TURN_TEN_SECONDS) {
+        return 13;
+    } else if (state->option_index == OI_TURN_SECONDS) {
+        return 14;
+    } else if (state->option_index == OI_FLAG_BEEP) {
+        return 28;
+    } else if (state->option_index == OI_TURN_BEEP) {
+        return 30;
+    } else if ((state->option_index == OI_P1_HOURS && player_number == 0)
+            || (state->option_index == OI_P2_HOURS && player_number == 1)) {
+        return 1;
+    } else if ((state->option_index == OI_P1_TEN_MINUTES && player_number == 0)
+            || (state->option_index == OI_P2_TEN_MINUTES && player_number == 1)) {
+        return 3;
+    } else if ((state->option_index == OI_P1_MINUTES && player_number == 0)
+            || (state->option_index == OI_P2_MINUTES && player_number == 1)) {
+        return 4;
+    } else if ((state->option_index == OI_P1_TEN_SECONDS && player_number == 0)
+            || (state->option_index == OI_P2_TEN_SECONDS && player_number == 1)) {
+        return 6;
+    } else if ((state->option_index == OI_P1_SECONDS && player_number == 0)
+            || (state->option_index == OI_P2_SECONDS && player_number == 1)) {
+        return 7;
+    } else {
+        return -1;
     }
 }
 
@@ -197,6 +230,7 @@ void applyDisplayBuffer(LCD_I2C *lcd, char old_buffer[ROWS][COLS], char buffer[R
 
 void LCDDisplay::renderGameState(GameState *game_state) {
     char new_buffers[2][ROWS][COLS];
+    int cursor_indices[2] = {-1, -1};
     uint8_t i, j;
     for (i = 0; i < ROWS; i++) {
         for (j = 0; j < COLS; j++) {
@@ -205,9 +239,16 @@ void LCDDisplay::renderGameState(GameState *game_state) {
         }
     }
 
-    if (game_state->clock_mode == CM_SELECT_SETTINGS) {
-        makeSettingsDisplayBuffer(new_buffers[0], 0, game_state->settings);
-        makeSettingsDisplayBuffer(new_buffers[1], 1, game_state->settings);
+    if (game_state->clock_mode == CM_SELECT_SETTINGS ||
+            game_state->clock_mode == CM_EDIT_SETTINGS) {
+        last_cursor_indices[0] = cursor_indices[0];
+        last_cursor_indices[1] = cursor_indices[1];
+        cursor_indices[0] = makeSettingsDisplayBuffer(
+            new_buffers[0], game_state, 0, game_state->settings
+        );
+        cursor_indices[1] = makeSettingsDisplayBuffer(
+            new_buffers[1], game_state, 1, game_state->settings
+        );
     } else {
         if (!game_state->player_states[0].outOfTime) {
             makeTimeDisplayBuffer(new_buffers[0], game_state->player_states[0].remainingMillis);
@@ -225,8 +266,20 @@ void LCDDisplay::renderGameState(GameState *game_state) {
         applyDisplayBuffer(&player_1, last_displayed[0], new_buffers[0]);
         memcpy(last_displayed[0], new_buffers[0], ROWS * COLS * sizeof(new_buffers[0][0][0]));
     }
+    if (cursor_indices[0] == -1) {
+        player_1.noCursor();
+    } else {
+        player_1.cursor();
+        player_1.setCursor(cursor_indices[0] % 16, (uint8_t) (cursor_indices[0] / 16));
+    }
     if (displayBuffersDiffer(new_buffers[1], last_displayed[1])) {
         applyDisplayBuffer(&player_2, last_displayed[1], new_buffers[1]);
         memcpy(last_displayed[1], new_buffers[1], ROWS * COLS * sizeof(new_buffers[0][0][0]));
+    }
+    if (cursor_indices[1] == -1) {
+        player_2.noCursor();
+    } else {
+        player_2.cursor();
+        player_2.setCursor(cursor_indices[1] % 16, (uint8_t) (cursor_indices[1] / 16));
     }
 }

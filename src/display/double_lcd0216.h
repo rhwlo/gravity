@@ -66,6 +66,7 @@ class LCDDisplay : public ChessDisplay {
     private:
         LCD_I2C player_1, player_2;
         char last_displayed[2][ROWS][COLS];
+        int last_cursor_indices[2];
 };
 
 #endif // DISPLAY_LCD_H

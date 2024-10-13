@@ -25,6 +25,16 @@ void chirpFifth(void) {
     noTone(BUZZER_PIN);
 }
 
+void chirpFiveSeven(void) {
+    tone(BUZZER_PIN, BUZZER_TONE);
+    delay(60);
+    tone(BUZZER_PIN, BUZZER_TONE_FIFTH);
+    delay(60);
+    tone(BUZZER_PIN, BUZZER_TONE_SEVENTH);
+    delay(110);
+    noTone(BUZZER_PIN);
+}
+
 void chirpSus4(void) {
     tone(BUZZER_PIN, BUZZER_TONE);
     delay(60);
@@ -62,8 +72,7 @@ void beep(beep_event_t event) {
         return;
     case BE_EDIT_SETTINGS:
     case BE_SAVE_SETTINGS:
-        chirpFifth();
-        chirpFifth();
+        chirpFiveSeven();
         return;
     case BE_FLAG:
         tripleBeep();

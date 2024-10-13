@@ -79,6 +79,8 @@ bool handlePauseButton(GameState *gs, int buttonState, unsigned long now) {
     if (buttonState == lastState[CENTER_IDX]) {
         return false;
     }
+    unsigned long prevStateChangeTime = lastStateChangeTime[CENTER_IDX];
+
     lastState[CENTER_IDX] = buttonState;
     lastStateChangeTime[CENTER_IDX] = now;
     // For the moment, we don't do anything when the button is pressed -- just when released.
@@ -88,7 +90,7 @@ bool handlePauseButton(GameState *gs, int buttonState, unsigned long now) {
     // handle pause button released
 
     // long press
-    if (now - lastStateChangeTime[CENTER_IDX] >= LONG_PRESS_DELAY) {
+    if (now - prevStateChangeTime >= LONG_PRESS_DELAY) {
         // long press : SELECT_SETTINGS -> EDIT_SETTINGS
         if (gs->clock_mode == CM_SELECT_SETTINGS) {
             gs->clock_mode = CM_EDIT_SETTINGS;
@@ -101,6 +103,7 @@ bool handlePauseButton(GameState *gs, int buttonState, unsigned long now) {
             gs->clock_mode = CM_SELECT_SETTINGS;
             gs->option_index = -1;
             buttonPresses[CENTER_IDX] = 0;
+            gs->reset();
             beep(BE_SAVE_SETTINGS);
             return true;
         }
@@ -185,33 +188,55 @@ bool handlePlayerButton(
             return true;
         case OI_P1_HOURS:
             curr_settings->player_settings[PLAYER1_IDX].totalMillis +=
-                ((playerIndex == PLAYER1_IDX) ? (-1) : (1)) * 3600000;
+                ((playerIndex == PLAYER2_IDX) ? (-1) : (1)) * 3600000;
             return true;
         case OI_P2_HOURS:
             curr_settings->player_settings[PLAYER2_IDX].totalMillis +=
-                ((playerIndex == PLAYER1_IDX) ? (-1) : (1)) * 3600000;
+                ((playerIndex == PLAYER2_IDX) ? (-1) : (1)) * 3600000;
+            return true;
+        case OI_P1_TEN_MINUTES:
+            curr_settings->player_settings[PLAYER1_IDX].totalMillis +=
+                ((playerIndex == PLAYER2_IDX) ? (-1) : (1)) * 600000;
             return true;
         case OI_P1_MINUTES:
             curr_settings->player_settings[PLAYER1_IDX].totalMillis +=
-                ((playerIndex == PLAYER1_IDX) ? (-1) : (1)) * 60000;
+                ((playerIndex == PLAYER2_IDX) ? (-1) : (1)) * 60000;
+            return true;
+        case OI_P2_TEN_MINUTES:
+            curr_settings->player_settings[PLAYER2_IDX].totalMillis +=
+                ((playerIndex == PLAYER2_IDX) ? (-1) : (1)) * 600000;
             return true;
         case OI_P2_MINUTES:
             curr_settings->player_settings[PLAYER2_IDX].totalMillis +=
-                ((playerIndex == PLAYER1_IDX) ? (-1) : (1)) * 60000;
+                ((playerIndex == PLAYER2_IDX) ? (-1) : (1)) * 60000;
+            return true;
+        case OI_P1_TEN_SECONDS:
+            curr_settings->player_settings[PLAYER1_IDX].totalMillis +=
+                ((playerIndex == PLAYER2_IDX) ? (-1) : (1)) * 10000;
             return true;
         case OI_P1_SECONDS:
             curr_settings->player_settings[PLAYER1_IDX].totalMillis +=
-                ((playerIndex == PLAYER1_IDX) ? (-1) : (1)) * 1000;
+                ((playerIndex == PLAYER2_IDX) ? (-1) : (1)) * 1000;
+            return true;
+        case OI_P2_TEN_SECONDS:
+            curr_settings->player_settings[PLAYER2_IDX].totalMillis +=
+                ((playerIndex == PLAYER2_IDX) ? (-1) : (1)) * 10000;
             return true;
         case OI_P2_SECONDS:
             curr_settings->player_settings[PLAYER2_IDX].totalMillis +=
-                ((playerIndex == PLAYER1_IDX) ? (-1) : (1)) * 1000;
+                ((playerIndex == PLAYER2_IDX) ? (-1) : (1)) * 1000;
+            return true;
+        case OI_TURN_TEN_SECONDS:
+            curr_settings->player_settings[PLAYER1_IDX].perTurnIncrMillis +=
+                ((playerIndex == PLAYER2_IDX) ? (-1) : (1)) * 10000;
+            curr_settings->player_settings[PLAYER2_IDX].perTurnIncrMillis +=
+                ((playerIndex == PLAYER2_IDX) ? (-1) : (1)) * 10000;
             return true;
         case OI_TURN_SECONDS:
             curr_settings->player_settings[PLAYER1_IDX].perTurnIncrMillis +=
-                ((playerIndex == PLAYER1_IDX) ? (-1) : (1)) * 1000;
+                ((playerIndex == PLAYER2_IDX) ? (-1) : (1)) * 1000;
             curr_settings->player_settings[PLAYER2_IDX].perTurnIncrMillis +=
-                ((playerIndex == PLAYER1_IDX) ? (-1) : (1)) * 1000;
+                ((playerIndex == PLAYER2_IDX) ? (-1) : (1)) * 1000;
             return true;
         default:
             return false;
@@ -280,10 +305,13 @@ void loop()
     bool gameModeChanged = handleButtonReads(&game_state, now);
     bool timersChanged = handleTimerIncr(&game_state, now);
     // We render the display if either:
-    // 1. we haven't rendered the display yet (lastPrinted == 0), or
+    // 1. we're in SELECT_SETTINGS or EDIT_SETTINGS modes
     // 2. the game mode has changed (ex., player turn changed), or
     // 3. the timers have changed, and it's been a PRINT_INTERVAL since our last render
-    if (lastPrinted == 0 || gameModeChanged || (timersChanged && (now - lastPrinted) >= PRINT_INTERVAL)) {
+    if (game_state.clock_mode == CM_SELECT_SETTINGS
+            || game_state.clock_mode == CM_EDIT_SETTINGS
+            || gameModeChanged
+            || (timersChanged && (now - lastPrinted) >= PRINT_INTERVAL)) {
         display.renderGameState(&game_state);
         lastPrinted = now;
     }

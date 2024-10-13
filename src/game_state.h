@@ -9,16 +9,21 @@
 #define VALIDATION_BYTE_1 0xC5
 #define GAME_SETTINGS_LEN 4
 
-#define OI_P1_HOURS     0
-#define OI_P1_MINUTES   1
-#define OI_P1_SECONDS   2
-#define OI_P2_HOURS     3
-#define OI_P2_MINUTES   4
-#define OI_P2_SECONDS   5
-#define OI_TURN_SECONDS 6
-#define OI_FLAG_BEEP    7
-#define OI_TURN_BEEP    8
-#define OI_COUNT        9
+#define OI_P2_HOURS             0
+#define OI_P2_TEN_MINUTES       1
+#define OI_P2_MINUTES           2
+#define OI_P2_TEN_SECONDS       3
+#define OI_P2_SECONDS           4
+#define OI_P1_HOURS             5
+#define OI_P1_TEN_MINUTES       6
+#define OI_P1_MINUTES           7
+#define OI_P1_TEN_SECONDS       8
+#define OI_P1_SECONDS           9
+#define OI_TURN_TEN_SECONDS     10
+#define OI_TURN_SECONDS         11
+#define OI_FLAG_BEEP            12
+#define OI_TURN_BEEP            13
+#define OI_COUNT                14
 
 enum clock_mode_t {
     CM_PAUSED,

@@ -196,31 +196,31 @@ void makeTimeDisplayBuffer(char buffer[2][16], unsigned long time) {
     unsigned long rt = time;
     uint8_t digit;
 
-    buffer[0][2] = CHAR_COLON_TOP;
-    buffer[1][2] = CHAR_COLON_BOTTOM;
-    buffer[0][7] = CHAR_COLON_TOP;
-    buffer[1][7] = CHAR_COLON_BOTTOM;
+    buffer[0][4] = CHAR_COLON_TOP;
+    buffer[1][4] = CHAR_COLON_BOTTOM;
+    buffer[0][9] = CHAR_COLON_TOP;
+    buffer[1][9] = CHAR_COLON_BOTTOM;
 
     // unit seconds
     rt /= SECOND_MILLIS;
     digit = rt % 10;
-    pushDigit(buffer, digit, 10, 0);
+    pushDigit(buffer, digit, 12, 0);
     // tens of seconds
     digit = (rt % 60) / 10;
-    pushDigit(buffer, digit, 8, 0);
+    pushDigit(buffer, digit, 10, 0);
     
     // unit minutes
     rt /= 60;
     digit = rt % 10;
-    pushDigit(buffer, digit, 5, 0);
+    pushDigit(buffer, digit, 7, 0);
     // tens of minutes
     digit = (rt % 60) / 10;
-    pushDigit(buffer, digit, 3, 0);
+    pushDigit(buffer, digit, 5, 0);
 
     // unit hours
     rt /= 60;
     digit = rt % 10;
-    pushDigit(buffer, digit, 0, 0);
+    pushDigit(buffer, digit, 2, 0);
 }
 
 bool displayBuffersDiffer(char buf1[ROWS][COLS], char buf2[ROWS][COLS]) {

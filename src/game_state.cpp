@@ -46,64 +46,69 @@ bool GameState::setTurn(unsigned short newTurn) {
 }
 
 
-game_settings_t setting_blitz_5m_0 = {
-    {
-        {
-            5 * MINUTE_MILLIS,  // totalMillis
-            0                   // perTurnIncrMillis,
-        },
-        {
-            5 * MINUTE_MILLIS,  // totalMillis
-            0                   // perTurnIncrMillis,
-        },
-    },
-    false,                      // flag beep
-    true                        // turn beep
-};
+uint8_t selected_game_settings = 1;
 
-game_settings_t setting_blitz_5m_3s = {
-    {
-        {
-            5 * MINUTE_MILLIS,  // totalMillis
-            3 * SECOND_MILLIS   // perTurnIncrMillis,
-        },
-        {
-            5 * MINUTE_MILLIS,  // totalMillis
-            3 * SECOND_MILLIS   // perTurnIncrMillis,
-        },
-    },
-    false,                      // flag beep
-    true                        // turn beep
-};
+game_settings_t all_game_settings[GAME_SETTINGS_LEN] = {
 
-game_settings_t setting_blitz_30s_0 = {
-    {
+    {   // 30 seconds               +f+t
         {
-            30 * SECOND_MILLIS, // totalMillis
-            0                   // perTurnIncrMillis,
+            {
+                30 * SECOND_MILLIS, // totalMillis
+                0                   // perTurnIncrMillis,
+            },
+            {
+                30 * SECOND_MILLIS, // totalMillis
+                0                   // perTurnIncrMillis,
+            },
         },
-        {
-            30 * SECOND_MILLIS, // totalMillis
-            0                   // perTurnIncrMillis,
-        },
+        true,                       // flag beep
+        true                        // turn beep
     },
-    true,                       // flag beep
-    true                        // turn beep
-};
 
-game_settings_t setting_15m_0 = {
-    {
+    {   // 5 minutes                +f+t
         {
-            15 * MINUTE_MILLIS, // totalMillis
-            0                   // perTurnIncrMillis,
+            {
+                5 * MINUTE_MILLIS,  // totalMillis
+                0                   // perTurnIncrMillis,
+            },
+            {
+                5 * MINUTE_MILLIS,  // totalMillis
+                0                   // perTurnIncrMillis,
+            },
         },
-        {
-            15 * MINUTE_MILLIS, // totalMillis
-            0                   // perTurnIncrMillis,
-        },
+        false,                      // flag beep
+        true                        // turn beep
     },
-    false,                      // flag beep
-    false                       // turn beep
+
+    {   // 5 minutes + 3 seconds    -f+t
+        {
+            {
+                5 * MINUTE_MILLIS,  // totalMillis
+                3 * SECOND_MILLIS   // perTurnIncrMillis,
+            },
+            {
+                5 * MINUTE_MILLIS,  // totalMillis
+                3 * SECOND_MILLIS   // perTurnIncrMillis,
+            },
+        },
+        false,                      // flag beep
+        true                        // turn beep
+    },
+
+    {   // 15 minutes               -f-t
+        {
+            {
+                15 * MINUTE_MILLIS, // totalMillis
+                0                   // perTurnIncrMillis,
+            },
+            {
+                15 * MINUTE_MILLIS, // totalMillis
+                0                   // perTurnIncrMillis,
+            },
+        },
+        false,                      // flag beep
+        false                       // turn beep
+    }
 };
 
 int write_validation_to_eeprom(EEPROMClass *eeprom, int eeprom_offset) {
@@ -143,14 +148,6 @@ int read_setting_from_eeprom(game_settings_t *game_settings, EEPROMClass *eeprom
     return i;
 }
 
-game_settings_t all_game_settings[GAME_SETTINGS_LEN] = {
-    setting_blitz_30s_0,
-    setting_blitz_5m_0,
-    setting_blitz_5m_3s,
-    setting_15m_0,
-};
-
-uint8_t selected_game_settings = 1;
 
 /* Write the settings state to EEPROM. This includes:
    1. the two-byte validation code (0xE4C5)

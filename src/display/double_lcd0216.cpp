@@ -173,6 +173,25 @@ int makeSettingsDisplayBuffer(char buffer[2][16], GameState *state, uint8_t play
     }
 }
 
+void makeOutOfTimeBuffer(char buffer[2][16]) {
+    for (uint8_t i = 0; i < 16; i++) {
+        buffer[0][i] = CHAR_BLANK;
+        buffer[1][i] = CHAR_BLANK;
+    }
+    buffer[0][1] = 0x03;
+    buffer[0][2] = 0x02;
+    buffer[0][3] = 'u';
+    buffer[0][4] = 't';
+    buffer[1][6] = 0x03;
+    buffer[1][7] = 0x02;
+    buffer[1][8] = 'f';
+    buffer[0][10] = 0x00;
+    buffer[0][11] = 0x05;
+    buffer[0][12] = 'i';
+    buffer[0][13] = 'm';
+    buffer[0][14] = 'e';
+}
+
 void makeTimeDisplayBuffer(char buffer[2][16], unsigned long time) {
     unsigned long rt = time;
     uint8_t digit;
@@ -250,15 +269,15 @@ void LCDDisplay::renderGameState(GameState *game_state) {
             new_buffers[1], game_state, 1, game_state->settings
         );
     } else {
-        if (!game_state->player_states[0].outOfTime) {
+        if (game_state->player_states[0].remainingMillis > 0) {
             makeTimeDisplayBuffer(new_buffers[0], game_state->player_states[0].remainingMillis);
         } else {
-            strcpy(new_buffers[0][0], "out of time");
+            makeOutOfTimeBuffer(new_buffers[0]);
         }
-        if (!game_state->player_states[1].outOfTime) {
+        if (game_state->player_states[1].remainingMillis > 0) {
             makeTimeDisplayBuffer(new_buffers[1], game_state->player_states[1].remainingMillis);
         } else {
-            strcpy(new_buffers[1][0], "out of time");
+            makeOutOfTimeBuffer(new_buffers[1]);
         }
     }
 

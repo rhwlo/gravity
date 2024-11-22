@@ -73,6 +73,7 @@ void setup()
     analogWrite(PLAYER2_LED_PIN, LED_OFF_LEVEL);
     pinMode(BUZZER_PIN, OUTPUT);
     read_settings_from_eeprom(&eeprom);
+    game_state.reset();
 }
 
 /* handlePauseButton returns true if it modifies any state, false otherwise. */

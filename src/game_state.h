@@ -2,7 +2,7 @@
 #define GAME_STATE_H
 
 #include "common.h"
-#include <EEPROM.h>
+#include <extEEPROM.h>
 
 
 #define PLAYER_RIGHT_IDX 0
@@ -49,8 +49,8 @@ struct game_settings_t
     bool turnBeep;      // beep when we change whose turn it is
 };
 
-void write_settings_to_eeprom(EEPROMClass *eeprom);
-bool read_settings_from_eeprom(EEPROMClass *eeprom);
+void write_settings_to_eeprom(extEEPROM *eeprom);
+bool read_settings_from_eeprom(extEEPROM *eeprom);
 
 struct player_state_t {
     bool outOfTime;

@@ -1,5 +1,8 @@
 #include <Arduino.h>
 #include <Wire.h>
+#include <extEEPROM.h>
+
+#define USE_EEPROM              1
 
 #include "src/game_state.h"
 #include "src/display.h"
@@ -60,19 +63,36 @@ SSD1306Display display;
 LCDDisplay display(PCF8574_ADDR_0, PCF8574_ADDR_1);
 #endif
 
-EEPROMClass eeprom = EEPROM;
+extEEPROM eeprom(kbits_2, 1, 8);
 
 void setup()
 {
+    byte status;
+
     pinMode(PLAYER1_BUTTON_PIN, INPUT_PULLUP);
     pinMode(PLAYER2_BUTTON_PIN, INPUT_PULLUP);
     pinMode(PAUSE_BUTTON_PIN,   INPUT_PULLUP);
-    display.begin();
     pinMode(PLAYER1_LED_PIN, OUTPUT);
     pinMode(PLAYER2_LED_PIN, OUTPUT);
     analogWrite(PLAYER1_LED_PIN, LED_OFF_LEVEL);
     analogWrite(PLAYER2_LED_PIN, LED_OFF_LEVEL);
+
+    display.begin();
     pinMode(BUZZER_PIN, OUTPUT);
+    if (eeprom.begin(extEEPROM::twiClock400kHz) != 0) {
+        analogWrite(PLAYER1_LED_PIN, LED_ON_LEVEL);
+        delay(300);
+        analogWrite(PLAYER1_LED_PIN, LED_OFF_LEVEL);
+        delay(200);
+        analogWrite(PLAYER1_LED_PIN, LED_ON_LEVEL);
+        delay(300);
+        analogWrite(PLAYER1_LED_PIN, LED_OFF_LEVEL);
+        delay(200);
+        analogWrite(PLAYER1_LED_PIN, LED_ON_LEVEL);
+        delay(300);
+        analogWrite(PLAYER1_LED_PIN, LED_OFF_LEVEL);
+        while (1) { ; }
+    }
     read_settings_from_eeprom(&eeprom);
     game_state.reset();
 }

@@ -112,8 +112,8 @@ game_settings_t all_game_settings[GAME_SETTINGS_LEN] = {
 };
 
 int write_validation_to_eeprom(EEPROMClass *eeprom, int eeprom_offset) {
-    eeprom->write(eeprom_offset,        VALIDATION_BYTE_0);
-    eeprom->write(eeprom_offset + 1,    VALIDATION_BYTE_1);
+    eeprom->update(eeprom_offset,        VALIDATION_BYTE_0);
+    eeprom->update(eeprom_offset + 1,    VALIDATION_BYTE_1);
     return 2;
 }
 
@@ -132,7 +132,7 @@ int write_setting_to_eeprom(game_settings_t *game_settings, EEPROMClass *eeprom,
         i++
     ) {
         ptr = (uint8_t *) (game_settings + i);
-        eeprom->write(i + eeprom_offset, *ptr);
+        eeprom->update(i + eeprom_offset, *ptr);
     }
     return i;
 }

@@ -38,6 +38,7 @@ unsigned long lastStateChangeTime[3] = {0, 0, 0};
 unsigned long lastStateChange[3] = {0, 0, 0};
 int lastState[3] = {HIGH, HIGH, HIGH};
 byte buttonPresses[3] = {0, 0, 0};
+bool ignoreNextRelease[3] = {false, false, false};
 unsigned long lastIncr = 0;
 unsigned long lastPrinted = 0;
 
@@ -93,6 +94,11 @@ bool handlePauseButton(GameState *gs, int buttonState, unsigned long now) {
         return false;
     }
     // handle pause button released
+
+    if (ignoreNextRelease[CENTER_IDX]) {
+        ignoreNextRelease[CENTER_IDX] = false;
+        return false;
+    }
 
     // long press
     if (now - prevStateChangeTime >= LONG_PRESS_DELAY) {
@@ -169,6 +175,11 @@ bool handlePlayerButton(
     }
     // handle released button
 
+    if (ignoreNextRelease[playerIndex]) {
+        ignoreNextRelease[playerIndex] = false;
+        return false;
+    }
+
     // if the game is active, and it isn't my turn, then my button does nothing
     if (gs->clock_mode == CM_ACTIVE && gs->whoseTurn != playerIndex) {
         return false;
@@ -177,6 +188,8 @@ bool handlePlayerButton(
     // if the center button is pressed, treat this as a "special toggle"
     if (lastState[CENTER_IDX] == LOW) {
         display.specialToggle();
+        ignoreNextRelease[CENTER_IDX] = true;
+        return true;
     }
 
     // if we're in the mode to confirm saving settings, save (or cancel) depending on the button
@@ -189,7 +202,9 @@ bool handlePlayerButton(
         gs->option_index = -1;
         gs->reset();
         beep(BE_SAVE_SETTINGS);
+        return true;
     }
+
     // if we're in settings editing mode, handle that
     if (gs->clock_mode == CM_EDIT_SETTINGS) {
         game_settings_t *curr_settings = &all_game_settings[selected_game_settings];

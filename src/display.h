@@ -9,7 +9,11 @@
 
 class ChessDisplay {
     public:
+        // render the given game state
         virtual void renderGameState(GameState *game_state);
+        // "special toggle", a customizable signal
+        virtual void specialToggle(void);
+        // initialize the display
         virtual void begin(void);
 };
 

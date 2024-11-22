@@ -18,8 +18,8 @@
 #define FONT                FONT_REAL_BOLD
 
 
-#define PCF8574_ADDR_0      0x26        // no jumpers are soldered
-#define PCF8574_ADDR_1      0x27        // A0 jumper is soldered
+#define PCF8574_ADDR_0      0x27        // A0 jumper is soldered
+#define PCF8574_ADDR_1      0x26        // no jumpers are soldered
 
 
 // Typefaces are courtesy of https://github.com/upiir/character_display_big_digits
@@ -62,9 +62,11 @@ class LCDDisplay : public ChessDisplay {
     public:
         LCDDisplay(uint8_t addr_1, uint8_t addr_2);
         void begin(void);
+        void specialToggle(void);
         void renderGameState(GameState *game_state);
     private:
         LCD_I2C player_1, player_2;
+        bool backlight;
         char last_displayed[2][ROWS][COLS];
         int last_cursor_indices[2];
 };

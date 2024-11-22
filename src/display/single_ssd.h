@@ -10,6 +10,7 @@ class SSD1306Display : public ChessDisplay {
         SSD1306Display(void);
         void begin(void);
         void renderGameState(GameState *game_state);
+        void specialToggle(void);
     private:
         void prettyPrintTime(unsigned long time);
         Adafruit_SSD1306 ssd;

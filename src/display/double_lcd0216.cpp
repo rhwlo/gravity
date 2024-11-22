@@ -56,6 +56,7 @@ LCDDisplay::LCDDisplay(uint8_t addr_1, uint8_t addr_2) :
     }
     last_cursor_indices[0] = -1;
     last_cursor_indices[1] = -1;
+    backlight = false;
 }
 
 void LCDDisplay::begin(void) {
@@ -87,6 +88,13 @@ void LCDDisplay::begin(void) {
     player_1.setCursor(0, 0);
     player_2.clear();
     player_2.setCursor(0, 0);
+    if (backlight) {
+        player_1.backlight();
+        player_2.backlight();
+    } else {
+        player_1.noBacklight();
+        player_2.noBacklight();
+    }
 }
 
 void pushDigit(char buffer[ROWS][COLS], uint8_t digit, uint8_t x_offset, uint8_t y_offset) {
@@ -223,6 +231,23 @@ void makeTimeDisplayBuffer(char buffer[2][16], unsigned long time) {
     pushDigit(buffer, digit, 2, 0);
 }
 
+void makeConfirmSaveSettingsBuffers(char new_buffer_1[ROWS][COLS], char new_buffer_2[ROWS][COLS]) {
+    /*
+        ^_temporary save  permanent save_^
+        ________________  ________________
+    */
+    static const char message[3][16] = {
+        {'^',' ','t','e','m','p','o','r','a','r','y',' ','s','a','v','e'},
+        {'p','e','r','m','a','n','e','n','t',' ','s','a','v','e',' ','^'},
+        {' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' '}
+    };
+    // new_buffer_1 is right; new_buffer_2 is left
+    memcpy(new_buffer_2[0], message[0], 16 * sizeof(message[0][0]));
+    memcpy(new_buffer_1[0], message[1], 16 * sizeof(message[0][0]));
+    memcpy(new_buffer_1[1], message[2], 16 * sizeof(message[0][0]));
+    memcpy(new_buffer_2[1], message[2], 16 * sizeof(message[0][0]));
+}
+
 bool displayBuffersDiffer(char buf1[ROWS][COLS], char buf2[ROWS][COLS]) {
     uint8_t i, j;
     for (i = 0; i < ROWS; i++) {
@@ -258,7 +283,9 @@ void LCDDisplay::renderGameState(GameState *game_state) {
         }
     }
 
-    if (game_state->clock_mode == CM_SELECT_SETTINGS ||
+    if (game_state->clock_mode == CM_CONFIRM_SAVE_SETTINGS) {
+        makeConfirmSaveSettingsBuffers(new_buffers[0], new_buffers[1]);
+    } else if (game_state->clock_mode == CM_SELECT_SETTINGS ||
             game_state->clock_mode == CM_EDIT_SETTINGS) {
         last_cursor_indices[0] = cursor_indices[0];
         last_cursor_indices[1] = cursor_indices[1];
@@ -300,5 +327,17 @@ void LCDDisplay::renderGameState(GameState *game_state) {
     } else {
         player_2.cursor();
         player_2.setCursor(cursor_indices[1] % 16, (uint8_t) (cursor_indices[1] / 16));
+    }
+}
+
+/* LCDDisplay interprets the "specialToggle" event to mean that it should toggle both backlights. */
+void LCDDisplay::specialToggle(void) {
+    backlight = !backlight;
+    if (backlight) {
+        player_1.backlight();
+        player_2.backlight();
+    } else {
+        player_1.noBacklight();
+        player_2.noBacklight();
     }
 }

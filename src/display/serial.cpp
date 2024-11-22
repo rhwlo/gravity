@@ -43,6 +43,10 @@ void SerialDisplay::prettyPrintTime(unsigned long time) {
     }
 }
 
+void SerialDisplay::specialToggle(void) {
+    serial->println("Special toggle event");
+}
+
 void SerialDisplay::renderGameState(GameState *game_state) {
     if (game_state->clock_mode == CM_PAUSED) {
         serial->println("PAUSED");

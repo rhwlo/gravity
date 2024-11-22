@@ -28,6 +28,8 @@
 #define LONG_PRESS_DELAY        1000
 #define PRINT_INTERVAL          200
 
+#define PLAYER_RIGHT_IDX 0
+#define PLAYER_LEFT_IDX  1
 #define PLAYER1_IDX 0
 #define PLAYER2_IDX 1
 #define CENTER_IDX  2
@@ -57,6 +59,8 @@ SSD1306Display display;
 LCDDisplay display(PCF8574_ADDR_0, PCF8574_ADDR_1);
 #endif
 
+EEPROMClass eeprom = EEPROM;
+
 void setup()
 {
     pinMode(PLAYER1_BUTTON_PIN, INPUT_PULLUP);
@@ -68,7 +72,7 @@ void setup()
     analogWrite(PLAYER1_LED_PIN, LED_OFF_LEVEL);
     analogWrite(PLAYER2_LED_PIN, LED_OFF_LEVEL);
     pinMode(BUZZER_PIN, OUTPUT);
-    read_state_from_eeprom(&EEPROM);
+    read_settings_from_eeprom(&eeprom);
 }
 
 /* handlePauseButton returns true if it modifies any state, false otherwise. */
@@ -98,13 +102,10 @@ bool handlePauseButton(GameState *gs, int buttonState, unsigned long now) {
             buttonPresses[CENTER_IDX] = 0;
             beep(BE_EDIT_SETTINGS);
             return true;
-        // long press : EDIT_SETTINGS -> SELECT_SETTINGS
+        // long press : EDIT_SETTINGS -> CONFIRM_SAVE_SETTINGS
         } else if (gs->clock_mode == CM_EDIT_SETTINGS) {
-            gs->clock_mode = CM_SELECT_SETTINGS;
-            gs->option_index = -1;
+            gs->clock_mode = CM_CONFIRM_SAVE_SETTINGS;
             buttonPresses[CENTER_IDX] = 0;
-            gs->reset();
-            beep(BE_SAVE_SETTINGS);
             return true;
         }
     }
@@ -137,7 +138,6 @@ bool handlePauseButton(GameState *gs, int buttonState, unsigned long now) {
         gs->settings = &(all_game_settings[selected_game_settings]);
         gs->reset();
         beep(BE_SELECT_SETTINGS);
-        write_state_to_eeprom(&EEPROM);
         return true;
     }
 
@@ -173,6 +173,22 @@ bool handlePlayerButton(
         return false;
     }
 
+    // if the center button is pressed, treat this as a "special toggle"
+    if (lastState[CENTER_IDX] == LOW) {
+        display.specialToggle();
+    }
+
+    // if we're in the mode to confirm saving settings, save (or cancel) depending on the button
+    if (gs->clock_mode == CM_CONFIRM_SAVE_SETTINGS) {
+        // Left button means "don't save to memory"; right button means "save to memory"
+        if (playerIndex == PLAYER1_IDX) { // Right button
+            write_settings_to_eeprom(&eeprom);
+        }
+        gs->clock_mode = CM_SELECT_SETTINGS;
+        gs->option_index = -1;
+        gs->reset();
+        beep(BE_SAVE_SETTINGS);
+    }
     // if we're in settings editing mode, handle that
     if (gs->clock_mode == CM_EDIT_SETTINGS) {
         game_settings_t *curr_settings = &all_game_settings[selected_game_settings];

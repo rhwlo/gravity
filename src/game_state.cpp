@@ -125,11 +125,13 @@ bool read_validation_from_eeprom(EEPROMClass *eeprom, int eeprom_offset) {
 int write_setting_to_eeprom(game_settings_t *game_settings, EEPROMClass *eeprom, int eeprom_offset) {
     int i = 0;
     uint8_t *ptr=0;
+    uint16_t eeprom_length = eeprom->length();
     for (
-        i = 0, ptr = (uint8_t *) (game_settings + i);
-        i < sizeof(game_settings) && (i + eeprom_offset) < eeprom->length();
+        i = 0;
+        i < sizeof(game_settings) && (i + eeprom_offset) < eeprom_length;
         i++
     ) {
+        ptr = (uint8_t *) (game_settings + i);
         eeprom->write(i + eeprom_offset, *ptr);
     }
     return i;
@@ -138,11 +140,13 @@ int write_setting_to_eeprom(game_settings_t *game_settings, EEPROMClass *eeprom,
 int read_setting_from_eeprom(game_settings_t *game_settings, EEPROMClass *eeprom, int eeprom_offset) {
     int i = 0;
     uint8_t *ptr=0;
+    uint16_t eeprom_length = eeprom->length();
     for (
-        i = 0, ptr = (uint8_t *) (game_settings + i);
-        i < sizeof(game_settings) && (i + eeprom_offset) < eeprom->length();
+        i = 0;
+        i < sizeof(game_settings) && (i + eeprom_offset) < eeprom_length;
         i++
     ) {
+        ptr = (uint8_t *) (game_settings + i);
         *ptr = eeprom->read(i + eeprom_offset);
     }
     return i;
@@ -152,34 +156,26 @@ int read_setting_from_eeprom(game_settings_t *game_settings, EEPROMClass *eeprom
 #ifdef USE_EEPROM
 /* Write the settings state to EEPROM. This includes:
    1. the two-byte validation code (0xE4C5)
-   2. one byte of the uint8_t selected_game_settings;
-   3. the contents of all stored game settings  */
-void write_state_to_eeprom(EEPROMClass *eeprom) {
+   2. the contents of all stored game settings  */
+void write_settings_to_eeprom(EEPROMClass *eeprom) {
     int eeprom_offset = 0;
     
     // Write validation
     eeprom_offset += write_validation_to_eeprom(eeprom, eeprom_offset);
 
-    // Write the index of the currently-selected game settings
-    eeprom->write(eeprom_offset, selected_game_settings);
-    eeprom_offset++;
-    
     // Write the contents of all the settings
     for (int i = 0; i < GAME_SETTINGS_LEN; i++) {
         eeprom_offset += write_setting_to_eeprom(&all_game_settings[i], eeprom, eeprom_offset);
     }
 }
 
-bool read_state_from_eeprom(EEPROMClass *eeprom) {
+bool read_settings_from_eeprom(EEPROMClass *eeprom) {
     int eeprom_offset = 0;
 
     if (!read_validation_from_eeprom(eeprom, eeprom_offset)) {
         return false;
     }
     eeprom_offset += 2;
-
-    selected_game_settings = eeprom->read(eeprom_offset);
-    eeprom_offset++;
 
     for (int i = 0; i < GAME_SETTINGS_LEN; i++) {
         eeprom_offset += read_setting_from_eeprom(
@@ -191,11 +187,11 @@ bool read_state_from_eeprom(EEPROMClass *eeprom) {
     return true;
 }
 #else
-void write_state_to_eeprom(EEPROMClass *eeprom) {
+void write_settings_to_eeprom(EEPROMClass *eeprom) {
     return;
 }
 
-bool read_state_from_eeprom(EEPROMClass *eeprom) {
+bool read_settings_from_eeprom(EEPROMClass *eeprom) {
     return true;
 }
 #endif

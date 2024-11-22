@@ -5,6 +5,9 @@
 #include <EEPROM.h>
 
 
+#define PLAYER_RIGHT_IDX 0
+#define PLAYER_LEFT_IDX  1
+
 #define VALIDATION_BYTE_0 0xE4
 #define VALIDATION_BYTE_1 0xC5
 #define GAME_SETTINGS_LEN 4
@@ -29,7 +32,8 @@ enum clock_mode_t {
     CM_PAUSED,
     CM_ACTIVE,
     CM_SELECT_SETTINGS,
-    CM_EDIT_SETTINGS
+    CM_EDIT_SETTINGS,
+    CM_CONFIRM_SAVE_SETTINGS
 };
 
 struct player_settings_t
@@ -45,8 +49,8 @@ struct game_settings_t
     bool turnBeep;      // beep when we change whose turn it is
 };
 
-void write_state_to_eeprom(EEPROMClass *eeprom);
-bool read_state_from_eeprom(EEPROMClass *eeprom);
+void write_settings_to_eeprom(EEPROMClass *eeprom);
+bool read_settings_from_eeprom(EEPROMClass *eeprom);
 
 struct player_state_t {
     bool outOfTime;

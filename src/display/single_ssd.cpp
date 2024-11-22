@@ -48,6 +48,9 @@ void SSD1306Display::prettyPrintTime(unsigned long time) {
     }
 }
 
+void SSD1306Display::specialToggle(void) {
+    return;
+}
 
 void SSD1306Display::renderGameState(GameState *game_state) {
     uint16_t white_fg, white_bg;

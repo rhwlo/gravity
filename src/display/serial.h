@@ -11,6 +11,7 @@ class SerialDisplay : public ChessDisplay {
         SerialDisplay(Stream *s);
         void renderGameState(GameState *game_state);
         void begin(void);
+        void specialToggle(void);
     private:
         void prettyPrintTime(unsigned long time);
         Stream *serial;

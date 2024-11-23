@@ -46,7 +46,7 @@ bool GameState::setTurn(unsigned short newTurn) {
 }
 
 
-uint8_t selected_game_settings = 1;
+uint8_t selected_game_settings = 0;
 
 game_settings_t all_game_settings[GAME_SETTINGS_LEN] = {
 

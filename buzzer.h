@@ -15,7 +15,8 @@ enum beep_event_t {
     BE_TURN_CHANGE,
     BE_WARNING,
     BE_EDIT_SETTINGS,
-    BE_SAVE_SETTINGS
+    BE_SAVE_SETTINGS,
+    BE_SPECIAL_TOGGLE
 };
 
 void beep(beep_event_t event);

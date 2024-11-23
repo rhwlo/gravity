@@ -80,6 +80,10 @@ void beep(beep_event_t event) {
     case BE_WARNING:
         doubleBeep();
         return;
+    case BE_SPECIAL_TOGGLE:
+        chirpFiveSeven();
+        chirpFiveSeven();
+        return;
     default:
         break;
     }

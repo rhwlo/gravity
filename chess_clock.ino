@@ -195,11 +195,6 @@ bool handlePlayerButton(
     }
     // handle released button
 
-    if (ignoreNextRelease[playerIndex]) {
-        ignoreNextRelease[playerIndex] = false;
-        return false;
-    }
-
     // if the game is active, and it isn't my turn, then my button does nothing
     if (gs->clock_mode == CM_ACTIVE && gs->whoseTurn != playerIndex) {
         return false;
@@ -207,9 +202,20 @@ bool handlePlayerButton(
 
     // if the center button is pressed, treat this as a "special toggle"
     if (lastState[CENTER_IDX] == LOW) {
-        display.specialToggle();
         ignoreNextRelease[CENTER_IDX] = true;
+        buttonPresses[playerIndex]++;
+        if (buttonPresses[playerIndex] >= 3) {
+            beep(BE_SPECIAL_TOGGLE);
+            display.specialToggle();
+            buttonPresses[playerIndex] = 0;
+        }
         return true;
+    }
+
+    if (ignoreNextRelease[playerIndex]) {
+        ignoreNextRelease[playerIndex] = false;
+        buttonPresses[playerIndex] = 0;
+        return false;
     }
 
     // if we're in the mode to confirm saving settings, save (or cancel) depending on the button

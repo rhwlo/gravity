@@ -82,3 +82,7 @@ To toggle the backlights on the displays, hold down the center button and tap on
 ## How to put the clock together
 
 ### Bill of materials
+
+# Acknowledgments
+
+Thanks to [avtanski.net][https://avtanski.net] for the [LCD Display Screenshot Generator](http://avtanski.net/projects/lcd/), which was quite helpful in making the screenshots!

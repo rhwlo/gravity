@@ -81,6 +81,8 @@ To toggle the backlights on the displays, hold down the center button and tap on
 
 ## How to put the clock together
 
+Still need to write this section out. Working on it. Sorry!
+
 ### Bill of materials
 
 # Acknowledgments

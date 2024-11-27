@@ -231,23 +231,6 @@ void makeTimeDisplayBuffer(char buffer[2][16], unsigned long time) {
     pushDigit(buffer, digit, 2, 0);
 }
 
-void makeConfirmSaveSettingsBuffers(char new_buffer_1[ROWS][COLS], char new_buffer_2[ROWS][COLS]) {
-    /*
-        ^_temporary save  permanent save_^
-        ________________  ________________
-    */
-    static const char message[3][16] = {
-        {'^',' ','t','e','m','p','o','r','a','r','y',' ','s','a','v','e'},
-        {'p','e','r','m','a','n','e','n','t',' ','s','a','v','e',' ','^'},
-        {' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' '}
-    };
-    // new_buffer_1 is right; new_buffer_2 is left
-    memcpy(new_buffer_2[0], message[0], 16 * sizeof(message[0][0]));
-    memcpy(new_buffer_1[0], message[1], 16 * sizeof(message[0][0]));
-    memcpy(new_buffer_1[1], message[2], 16 * sizeof(message[0][0]));
-    memcpy(new_buffer_2[1], message[2], 16 * sizeof(message[0][0]));
-}
-
 bool displayBuffersDiffer(char buf1[ROWS][COLS], char buf2[ROWS][COLS]) {
     uint8_t i, j;
     for (i = 0; i < ROWS; i++) {
@@ -283,9 +266,7 @@ void LCDDisplay::renderGameState(GameState *game_state) {
         }
     }
 
-    if (game_state->clock_mode == CM_CONFIRM_SAVE_SETTINGS) {
-        makeConfirmSaveSettingsBuffers(new_buffers[0], new_buffers[1]);
-    } else if (game_state->clock_mode == CM_SELECT_SETTINGS ||
+    if (game_state->clock_mode == CM_SELECT_SETTINGS ||
             game_state->clock_mode == CM_EDIT_SETTINGS) {
         last_cursor_indices[0] = cursor_indices[0];
         last_cursor_indices[1] = cursor_indices[1];

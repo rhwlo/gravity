@@ -32,8 +32,7 @@ enum clock_mode_t {
     CM_PAUSED,
     CM_ACTIVE,
     CM_SELECT_SETTINGS,
-    CM_EDIT_SETTINGS,
-    CM_CONFIRM_SAVE_SETTINGS
+    CM_EDIT_SETTINGS
 };
 
 struct player_settings_t

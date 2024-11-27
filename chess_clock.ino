@@ -129,10 +129,13 @@ bool handlePauseButton(GameState *gs, int buttonState, unsigned long now) {
             buttonPresses[CENTER_IDX] = 0;
             beep(BE_EDIT_SETTINGS);
             return true;
-        // long press : EDIT_SETTINGS -> CONFIRM_SAVE_SETTINGS
+        // long press, save changes : EDIT_SETTINGS -> SELECT_SETTINGS
         } else if (gs->clock_mode == CM_EDIT_SETTINGS) {
-            gs->clock_mode = CM_CONFIRM_SAVE_SETTINGS;
+            gs->clock_mode = CM_SELECT_SETTINGS;
             buttonPresses[CENTER_IDX] = 0;
+            gs->option_index = -1;
+            gs->reset();
+            beep(BE_SAVE_SETTINGS);
             return true;
         }
     }
@@ -216,19 +219,6 @@ bool handlePlayerButton(
         ignoreNextRelease[playerIndex] = false;
         buttonPresses[playerIndex] = 0;
         return false;
-    }
-
-    // if we're in the mode to confirm saving settings, save (or cancel) depending on the button
-    if (gs->clock_mode == CM_CONFIRM_SAVE_SETTINGS) {
-        // Left button means "don't save to memory"; right button means "save to memory"
-        if (playerIndex == PLAYER1_IDX) { // Right button
-            write_settings_to_eeprom(&eeprom);
-        }
-        gs->clock_mode = CM_SELECT_SETTINGS;
-        gs->option_index = -1;
-        gs->reset();
-        beep(BE_SAVE_SETTINGS);
-        return true;
     }
 
     // if we're in settings editing mode, handle that

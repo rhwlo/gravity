@@ -75,6 +75,10 @@ To pause a game, press the center button. To resume, press the left or right but
 
 Pause the game by pressing the center button, then press the center button two more times to reset the game.
 
+### Special: toggling backlight
+
+To toggle the backlights on the displays, hold down the center button and tap one of the turn buttons three times.
+
 ## How to put the clock together
 
 ### Bill of materials

@@ -30,9 +30,22 @@ unsigned char special_04[8] = {B11011,B10000,B00000,B10000,B10000,B00000,B10000,
 unsigned char special_05[8] = {B10000,B10000,B00000,B10000,B10000,B00000,B10000,B10000};
 unsigned char special_06[8] = {B11011,B00000,B00000,B00000,B00000,B00000,B00000,B11011};
 unsigned char special_07[8] = {B10000,B10000,B00000,B10000,B10000,B00000,B10000,B11011};
+#elif FONT == FONT_WIDE
+unsigned char special_00[8] = {B00111,B01111,B11111,B11111,B11111,B11111,B11111,B11111};
+unsigned char special_01[8] = {B11111,B11111,B11111,B00000,B00000,B00000,B00000,B00000};
+unsigned char special_02[8] = {B11100,B11110,B11111,B11111,B11111,B11111,B11111,B11111};
+unsigned char special_03[8] = {B11111,B11111,B11111,B11111,B11111,B11111,B01111,B00111};
+unsigned char special_04[8] = {B00000,B00000,B00000,B00000,B00000,B11111,B11111,B11111};
+unsigned char special_05[8] = {B11111,B11111,B11111,B11111,B11111,B11111,B11110,B11100};
+unsigned char special_06[8] = {B11111,B11111,B11111,B00000,B00000,B00000,B11111,B11111};
+unsigned char special_07[8] = {B00000,B00000,B01100,B10110,B00101,B11111,B10100,B11111};
 #endif
 
+#if FONT == FONT_WIDE
+const uint8_t font_digits[10][6] = {
+#else
 const uint8_t font_digits[10][4] = {
+#endif
     DIGIT_0_MAP,
     DIGIT_1_MAP,
     DIGIT_2_MAP,
@@ -99,10 +112,19 @@ void LCDDisplay::begin(void) {
 
 void pushDigit(char buffer[ROWS][COLS], uint8_t digit, uint8_t x_offset, uint8_t y_offset) {
     if (digit >= 0 && digit <= 9) {
+#if FONT == FONT_WIDE
+        buffer[y_offset + 0][x_offset + 0] = font_digits[digit][0];
+        buffer[y_offset + 0][x_offset + 1] = font_digits[digit][1];
+        buffer[y_offset + 0][x_offset + 2] = font_digits[digit][2];
+        buffer[y_offset + 1][x_offset + 0] = font_digits[digit][3];
+        buffer[y_offset + 1][x_offset + 1] = font_digits[digit][4];
+        buffer[y_offset + 1][x_offset + 2] = font_digits[digit][5];
+#else
         buffer[y_offset][x_offset] = font_digits[digit][0];
         buffer[y_offset][x_offset + 1] = font_digits[digit][1];
         buffer[y_offset + 1][x_offset] = font_digits[digit][2];
         buffer[y_offset + 1][x_offset + 1] = font_digits[digit][3];
+#endif
     }
 }
 
@@ -201,6 +223,49 @@ void makeOutOfTimeBuffer(char buffer[2][16]) {
 }
 
 void makeTimeDisplayBuffer(char buffer[2][16], unsigned long time) {
+#if FONT == FONT_WIDE
+    unsigned long rt = time;
+    uint8_t digit;
+    buffer[0][7] = CHAR_COLON_TOP;
+    buffer[1][7] = CHAR_COLON_BOTTOM;
+    buffer[0][0] = buffer[1][0] = ' ';
+    buffer[0][14] = buffer[1][14] = buffer[0][15] = buffer[1][15] = ' ';
+    // if we have more than 99 minutes of time, do HH:MM
+    if (time > SECOND_MILLIS * 60 * 99) {
+        // unit minutes
+        rt /= SECOND_MILLIS * 60;
+        digit = rt % 10;
+        pushDigit(buffer, digit, 11, 0);
+        // tens of minutes
+        digit = (rt % 60) / 10;
+        pushDigit(buffer, digit, 8, 0);
+
+        // unit hours
+        rt /= 60;
+        digit = rt % 10;
+        pushDigit(buffer, digit, 4, 0);
+        // tens of hours
+        digit = (rt % 100) / 10;
+        pushDigit(buffer, digit, 1, 0);
+    // if we have less than 99 minutes of time, do MM:SS
+    } else {
+        // unit seconds
+        rt /= SECOND_MILLIS;
+        digit = rt % 10;
+        pushDigit(buffer, digit, 11, 0);
+        // tens of seconds
+        digit = (rt % 60) / 10;
+        pushDigit(buffer, digit, 8, 0);
+
+        // unit minutes
+        rt /= 60;
+        digit = rt % 10;
+        pushDigit(buffer, digit, 4, 0);
+        // tens of minutes
+        digit = (rt % 100) / 10;
+        pushDigit(buffer, digit, 1, 0);
+    }
+#else
     unsigned long rt = time;
     uint8_t digit;
 
@@ -229,6 +294,7 @@ void makeTimeDisplayBuffer(char buffer[2][16], unsigned long time) {
     rt /= 60;
     digit = rt % 10;
     pushDigit(buffer, digit, 2, 0);
+#endif
 }
 
 bool displayBuffersDiffer(char buf1[ROWS][COLS], char buf2[ROWS][COLS]) {

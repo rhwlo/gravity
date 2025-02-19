@@ -87,4 +87,4 @@ Still need to write this section out. Working on it. Sorry!
 
 # Acknowledgments
 
-Thanks to [avtanski.net][https://avtanski.net] for the [LCD Display Screenshot Generator](http://avtanski.net/projects/lcd/), which was quite helpful in making the screenshots!
+Thanks to [avtanski.net](https://avtanski.net) for the [LCD Display Screenshot Generator](http://avtanski.net/projects/lcd/), which was quite helpful in making the screenshots!

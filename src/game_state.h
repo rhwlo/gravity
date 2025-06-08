@@ -28,6 +28,15 @@
 #define OI_TURN_BEEP            13
 #define OI_COUNT                14
 
+
+// EEPROM communication error codes
+#define GS_ERR_TOO_LONG         -1
+#define GS_ERR_ADDR_SEND_NACK   -2
+#define GS_ERR_DATA_SEND_NACK   -3
+#define GS_ERR_OTHER_TWI_ERR    -4
+#define GS_ERR_TIMEOUT          -5
+#define GS_ERR_VALUE_MISMATCH   -6
+
 enum clock_mode_t {
     CM_PAUSED,
     CM_ACTIVE,
@@ -48,16 +57,21 @@ struct game_settings_t
     bool turnBeep;      // beep when we change whose turn it is
 };
 
-int write_to_eeprom(extEEPROM *eeprom, unsigned long addr, player_settings_t *value);
-int write_to_eeprom(extEEPROM *eeprom, unsigned long addr, game_settings_t *value);
-int write_to_bytes(byte bytes[], unsigned long offset, player_settings_t *value);
-int write_to_bytes(byte bytes[], unsigned long offset, game_settings_t *value);
-int read_from_eeprom(extEEPROM *eeprom, unsigned long addr, player_settings_t *value);
-int read_from_eeprom(extEEPROM *eeprom, unsigned long addr, game_settings_t *value);
+
+int write_to_eeprom(extEEPROM *eeprom, unsigned long *eeprom_offset, player_settings_t *value);
+int write_to_eeprom(extEEPROM *eeprom, unsigned long *eeprom_offset, game_settings_t *value);
+int write_to_bytes(byte bytes[], unsigned long *offset, player_settings_t *value);
+int write_to_bytes(byte bytes[], unsigned long *offset, game_settings_t *value);
+int read_from_eeprom(extEEPROM *eeprom, unsigned long *eeprom_offset, player_settings_t *value);
+int read_from_eeprom(extEEPROM *eeprom, unsigned long *eeprom_offset, game_settings_t *value);
 
 int write_settings_to_eeprom(extEEPROM *eeprom);
+int write_settings_to_eeprom(extEEPROM *eeprom, unsigned long *eeprom_position);
 int write_settings_to_bytes(byte bytes[]);
+int write_settings_to_bytes(byte bytes[], unsigned long *offset);
 int read_settings_from_eeprom(extEEPROM *eeprom);
+int read_settings_from_eeprom(extEEPROM *eeprom, unsigned long *eeprom_position);
+
 
 struct player_state_t {
     bool outOfTime;

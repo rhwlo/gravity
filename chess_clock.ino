@@ -96,7 +96,7 @@ bool handlePauseButton(GameState *gs, int buttonState, unsigned long now) {
     // 1. we aren't past the debounce delay, or
     (now - lastStateChangeTime[CENTER_IDX] < DEBOUNCE_DELAY)
     // 2. the buttonState hasn't changed from what was last recorded
-    || (buttonState == lastState[CENTER_IDX])){
+    || (buttonState == lastState[CENTER_IDX])) {
     return false;
   }
 
@@ -128,13 +128,13 @@ bool handlePauseButton(GameState *gs, int buttonState, unsigned long now) {
       buttonPresses[CENTER_IDX] = 0;
       beep(BE_EDIT_SETTINGS);
       return true;
-    // long press, save changes : EDIT_SETTINGS -> SELECT_SETTINGS
+      // long press, save changes : EDIT_SETTINGS -> SELECT_SETTINGS
     } else if (gs->clock_mode == CM_EDIT_SETTINGS) {
       gs->clock_mode = CM_SELECT_SETTINGS;
       buttonPresses[CENTER_IDX] = 0;
       gs->option_index = -1;
       gs->reset();
-      write_settings_to_eeprom(eeprom);
+      blinkForeverForError(write_settings_to_eeprom(eeprom));
       beep(BE_SAVE_SETTINGS);
       return true;
     }

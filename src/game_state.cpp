@@ -199,7 +199,7 @@ int write_header_to_bytes(byte bytes[], unsigned long *offset) {
 int read_header_from_eeprom(extEEPROM *eeprom, unsigned long *eeprom_position) {
     int result = 0;
     result = eeprom->read(*eeprom_position);
-    *eeprom_position++;
+    (*eeprom_position)++;
 
     if (result < 0) {
         return result;
@@ -208,7 +208,7 @@ int read_header_from_eeprom(extEEPROM *eeprom, unsigned long *eeprom_position) {
     }
 
     result = eeprom->read(*eeprom_position);
-    *eeprom_position++;
+    (*eeprom_position)++;
     if (result < 0) {
         return result;
     } else if (((byte) result) != VALIDATION_BYTE_1) {
@@ -216,7 +216,7 @@ int read_header_from_eeprom(extEEPROM *eeprom, unsigned long *eeprom_position) {
     }
 
     result = eeprom->read(*eeprom_position);
-    *eeprom_position++;
+    (*eeprom_position)++;
     if (result < 0) {
         return result;
     } else if (((byte) result) != GAME_SETTINGS_LEN) {

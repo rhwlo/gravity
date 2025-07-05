@@ -48,6 +48,40 @@ bool GameState::setTurn(unsigned short newTurn) {
 
 uint8_t selected_game_settings = 0;
 
+void load_default_settings(void) {
+    // 30 seconds                   +f+t
+    all_game_settings[0].flagBeep = true;
+    all_game_settings[0].turnBeep = true;
+    all_game_settings[0].player_settings[0].totalMillis = 30 * SECOND_MILLIS;
+    all_game_settings[0].player_settings[0].perTurnIncrMillis = 0;
+    all_game_settings[0].player_settings[1].totalMillis = 30 * SECOND_MILLIS;
+    all_game_settings[0].player_settings[1].perTurnIncrMillis = 0;
+
+    // 5 minutes                    -f+t
+    all_game_settings[1].flagBeep = false;
+    all_game_settings[1].turnBeep = true;
+    all_game_settings[1].player_settings[0].totalMillis = 5 * MINUTE_MILLIS;
+    all_game_settings[1].player_settings[0].perTurnIncrMillis = 0;
+    all_game_settings[1].player_settings[1].totalMillis = 5 * MINUTE_MILLIS;
+    all_game_settings[1].player_settings[1].perTurnIncrMillis = 0;
+
+    // 5 minutes + 3 seconds        -f+t
+    all_game_settings[2].flagBeep = false;
+    all_game_settings[2].turnBeep = true;
+    all_game_settings[2].player_settings[0].totalMillis = 5 * MINUTE_MILLIS;
+    all_game_settings[2].player_settings[0].perTurnIncrMillis = 3 * SECOND_MILLIS;
+    all_game_settings[2].player_settings[1].totalMillis = 5 * MINUTE_MILLIS;
+    all_game_settings[2].player_settings[1].perTurnIncrMillis = 3 * SECOND_MILLIS;
+
+    // 15 minutes                   -f-t
+    all_game_settings[3].flagBeep = false;
+    all_game_settings[3].turnBeep = false;
+    all_game_settings[3].player_settings[0].totalMillis = 15 * MINUTE_MILLIS;
+    all_game_settings[3].player_settings[0].perTurnIncrMillis = 0;
+    all_game_settings[3].player_settings[1].totalMillis = 15 * MINUTE_MILLIS;
+    all_game_settings[3].player_settings[1].perTurnIncrMillis = 0;
+}
+
 game_settings_t all_game_settings[GAME_SETTINGS_LEN] = {
 
     {   // 30 seconds               +f+t

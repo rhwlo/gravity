@@ -72,6 +72,7 @@ int write_settings_to_bytes(byte bytes[], unsigned long *offset);
 int read_settings_from_eeprom(extEEPROM *eeprom);
 int read_settings_from_eeprom(extEEPROM *eeprom, unsigned long *eeprom_position);
 
+void load_default_settings(void);
 
 struct player_state_t {
     bool outOfTime;

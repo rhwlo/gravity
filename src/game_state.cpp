@@ -361,7 +361,7 @@ int write_settings_to_eeprom(extEEPROM *eeprom, unsigned long *eeprom_offset) {
 
 int write_settings_to_eeprom(extEEPROM *eeprom) {
     unsigned long eeprom_offset = 0;
-    return write_header_to_eeprom(eeprom, &eeprom_offset);
+    return write_settings_to_eeprom(eeprom, &eeprom_offset);
 }
 
 int write_settings_to_bytes(byte bytes[], unsigned long *offset) {

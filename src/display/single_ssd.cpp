@@ -82,3 +82,10 @@ void SSD1306Display::renderGameState(GameState *game_state) {
     ssd.println();
     ssd.display();
 }
+
+void SSD1306Display::print(const char *str) {
+    ssd.clearDisplay();
+    ssd.setCursor(0, 0);
+    ssd.setTextSize(2);
+    ssd.print(str);
+}

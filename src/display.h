@@ -15,6 +15,8 @@ class ChessDisplay {
         virtual void specialToggle(void);
         // initialize the display
         virtual void begin(void);
+        // write text directly to the display
+        virtual void print(const char *str);
 };
 
 #endif // DISPLAY_COMMON_H

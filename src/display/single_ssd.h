@@ -11,6 +11,7 @@ class SSD1306Display : public ChessDisplay {
         void begin(void);
         void renderGameState(GameState *game_state);
         void specialToggle(void);
+        void print(const char *str);
     private:
         void prettyPrintTime(unsigned long time);
         Adafruit_SSD1306 ssd;

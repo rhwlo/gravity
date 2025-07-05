@@ -58,15 +58,27 @@ const uint8_t font_digits[10][4] = {
     DIGIT_9_MAP
 };
 
+void blankBuffer(char buffer[ROWS][COLS], char blank) {
+    for (uint8_t i = 0; i < ROWS; i++) {
+        for (uint8_t j = 0; j < COLS; j++) {
+            buffer[i][j] = blank;
+        }
+    }
+}
+
+void blankBuffers(char buffers[2][ROWS][COLS], char blank) {
+    blankBuffer(buffers[0], blank);
+    blankBuffer(buffers[1], blank);
+}
+
+void blankBuffers(char buffers[2][ROWS][COLS]) {
+    blankBuffers(buffers, CHAR_BLANK);
+}
+
 LCDDisplay::LCDDisplay(uint8_t addr_1, uint8_t addr_2) :
     player_1(addr_1, COLS, ROWS),
     player_2(addr_2, COLS, ROWS) {
-    for (uint8_t i = 0; i < ROWS; i++) {
-        for (uint8_t j = 0; j < COLS; j++) {
-            last_displayed[0][i][j] = CHAR_BLANK;
-            last_displayed[1][i][j] = CHAR_BLANK;
-        }
-    }
+    blankBuffers(last_displayed);
     last_cursor_indices[0] = -1;
     last_cursor_indices[1] = -1;
     backlight = false;
@@ -204,10 +216,7 @@ int makeSettingsDisplayBuffer(char buffer[2][16], GameState *state, uint8_t play
 }
 
 void makeOutOfTimeBuffer(char buffer[2][16]) {
-    for (uint8_t i = 0; i < 16; i++) {
-        buffer[0][i] = CHAR_BLANK;
-        buffer[1][i] = CHAR_BLANK;
-    }
+    blankBuffer(buffer, CHAR_BLANK);
     buffer[0][1] = 0x03;
     buffer[0][2] = 0x02;
     buffer[0][3] = 'u';
@@ -324,13 +333,7 @@ void applyDisplayBuffer(LCD_I2C *lcd, char old_buffer[ROWS][COLS], char buffer[R
 void LCDDisplay::renderGameState(GameState *game_state) {
     char new_buffers[2][ROWS][COLS];
     int cursor_indices[2] = {-1, -1};
-    uint8_t i, j;
-    for (i = 0; i < ROWS; i++) {
-        for (j = 0; j < COLS; j++) {
-            new_buffers[0][i][j] = CHAR_BLANK;
-            new_buffers[1][i][j] = CHAR_BLANK;
-        }
-    }
+    blankBuffers(new_buffers, CHAR_BLANK);
 
     if (game_state->clock_mode == CM_SELECT_SETTINGS ||
             game_state->clock_mode == CM_EDIT_SETTINGS) {
@@ -387,4 +390,21 @@ void LCDDisplay::specialToggle(void) {
         player_1.noBacklight();
         player_2.noBacklight();
     }
+}
+
+/* Display text directly on the screens */
+void LCDDisplay::print(const char *str) {
+    char new_buffers[2][ROWS][COLS];
+    blankBuffers(new_buffers);
+    uint8_t i;
+    for (i = 0; i < ROWS * COLS * 2; i++) {
+        if (str[i] == 0x00) {
+            break;
+        }
+        new_buffers[1 - (i / (ROWS * COLS))][(i / COLS) % ROWS][i % COLS] = str[i];
+    }
+    applyDisplayBuffer(&player_1, last_displayed[0], new_buffers[0]);
+    applyDisplayBuffer(&player_2, last_displayed[1], new_buffers[1]);
+    memcpy(last_displayed[0], new_buffers[0], ROWS * COLS * sizeof(new_buffers[0][0][0]));
+    memcpy(last_displayed[1], new_buffers[1], ROWS * COLS * sizeof(new_buffers[0][0][0]));
 }

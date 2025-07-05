@@ -71,3 +71,7 @@ void SerialDisplay::renderGameState(GameState *game_state) {
         serial->println();
     }
 }
+
+void SerialDisplay::print(const char *str) {
+    serial->println(str);
+}

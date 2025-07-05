@@ -76,6 +76,8 @@ class LCDDisplay : public ChessDisplay {
         void begin(void);
         void specialToggle(void);
         void renderGameState(GameState *game_state);
+        void print(const char *str);
+        void print(const char *strA, const char *strB);
     private:
         LCD_I2C player_1, player_2;
         bool backlight;

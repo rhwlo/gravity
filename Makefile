@@ -42,3 +42,12 @@ write_fuses:
 clean:
 	@echo "Cleaning the build directory"
 	rm -rf $(BUILD_DIR)
+
+help:
+	@echo "targets: "
+	@echo " - compile"
+	@echo " - upload"
+	@echo " - read_fuses"
+	@echo " - write_fuses"
+	@echo " - clean"
+	@echo " - $(ELF)"

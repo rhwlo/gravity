@@ -98,18 +98,20 @@ void setup() {
   // Connect to EEPROM; blink forever for error if something goes wrong.
   blinkForeverForError(1, eeprom.begin(extEEPROM::twiClock400kHz));
 
-  // Read settings from EEPROM; blink forever for error if something goes wrong.
+  // Read settings from EEPROM; print some things and blink forever for error if
+  // something goes wrong.
   status = read_settings_from_eeprom(&eeprom);
-  if (status == GS_ERR_VALUE_MISMATCH || status == EEPROM_ADDR_ERR) {
+  if (status != 0) {
     if (status == GS_ERR_VALUE_MISMATCH) {
-      displayAndWait("Error reading from EEPROM: Value mismatch");
+      displayAndWait("Error reading from EEPROM: Header mismatch");
+    } else if (status == -EEPROM_ADDR_ERR) {
+      displayAndWait("Error reading from EEPROM: read out of bounds");
     } else {
-      displayAndWait("Error reading from EEPROM: Address Error");
+      display.print("Error reading from EEPROM");
+      blinkForeverForError(2, status);
     }
     delay(DEBOUNCE_DELAY);
     load_default_settings();
-  } else {
-    blinkForeverForError(2, status);
   }
 
   // Initialize (reset) the game state

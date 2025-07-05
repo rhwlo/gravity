@@ -40,7 +40,7 @@ LCDDisplay display(PCF8574_ADDR_0, PCF8574_ADDR_1);
 
 extEEPROM eeprom(kbits_2, 1, 8);
 
-void blinkForeverForError(int status) {
+void blinkForeverForError(uint8_t code, int status) {
   // if status == 0, return immediately; there was no error.
   if (status == 0) {
     return;
@@ -51,8 +51,16 @@ void blinkForeverForError(int status) {
     status *= -1;
   }
 
-  // blink #status times, then wait for 1 second.
+  // blink the left LED to indicate where the exception was raised,
+  // then blink the right LED #status times
+  // then wait for 1 second.
   while (1) {
+    for (int i = 0; i < code; i++) {
+      analogWrite(PLAYER2_LED_PIN, LED_ON_LEVEL);
+      delay(300);
+      analogWrite(PLAYER2_LED_PIN, LED_OFF_LEVEL);
+      delay(200);
+    }
     for (int i = 0; i < status; i++) {
       analogWrite(PLAYER1_LED_PIN, LED_ON_LEVEL);
       delay(300);
@@ -60,6 +68,15 @@ void blinkForeverForError(int status) {
       delay(200);
     }
     delay(1000);
+  }
+}
+
+void displayAndWait(const char *message) {
+  display.print(message);
+  while (digitalRead(PAUSE_BUTTON_PIN) == HIGH
+         && digitalRead(PLAYER1_BUTTON_PIN) == HIGH
+         && digitalRead(PLAYER2_BUTTON_PIN) == HIGH) {
+    delay(200);
   }
 }
 
@@ -79,10 +96,21 @@ void setup() {
   pinMode(BUZZER_PIN, OUTPUT);
 
   // Connect to EEPROM; blink forever for error if something goes wrong.
-  blinkForeverForError(eeprom.begin(extEEPROM::twiClock400kHz));
+  blinkForeverForError(1, eeprom.begin(extEEPROM::twiClock400kHz));
 
   // Read settings from EEPROM; blink forever for error if something goes wrong.
-  blinkForeverForError(read_settings_from_eeprom(&eeprom));
+  status = read_settings_from_eeprom(&eeprom);
+  if (status == GS_ERR_VALUE_MISMATCH || status == EEPROM_ADDR_ERR) {
+    if (status == GS_ERR_VALUE_MISMATCH) {
+      displayAndWait("Error reading from EEPROM: Value mismatch");
+    } else {
+      displayAndWait("Error reading from EEPROM: Address Error");
+    }
+    delay(DEBOUNCE_DELAY);
+    load_default_settings();
+  } else {
+    blinkForeverForError(2, status);
+  }
 
   // Initialize (reset) the game state
   game_state.reset();
@@ -134,7 +162,7 @@ bool handlePauseButton(GameState *gs, int buttonState, unsigned long now) {
       buttonPresses[CENTER_IDX] = 0;
       gs->option_index = -1;
       gs->reset();
-      blinkForeverForError(write_settings_to_eeprom(eeprom));
+      blinkForeverForError(3, write_settings_to_eeprom(&eeprom));
       beep(BE_SAVE_SETTINGS);
       return true;
     }

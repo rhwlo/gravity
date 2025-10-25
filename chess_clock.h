@@ -16,7 +16,7 @@
 
 #define DEBOUNCE_DELAY          100
 #define LONG_PRESS_DELAY        1000
-#define PRINT_INTERVAL          200
+#define PRINT_INTERVAL          75
 
 #define PLAYER_RIGHT_IDX 0
 #define PLAYER_LEFT_IDX  1

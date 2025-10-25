@@ -3,9 +3,10 @@
 
 #include "game_state.h"
 
-#define DISPLAY_SERIAL      1
-#define DISPLAY_DOUBLE_LCD  2
-#define DISPLAY_SINGLE_OLED 3
+#define DISPLAY_SERIAL          1
+#define DISPLAY_DOUBLE_LCD_0216 2
+#define DISPLAY_SINGLE_OLED     3
+#define DISPLAY_DOUBLE_LCD_0108 4
 
 class ChessDisplay {
     public:

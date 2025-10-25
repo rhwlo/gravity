@@ -7,7 +7,7 @@
 #include "src/game_state.h"
 #include "src/display.h"
 
-#define USE_DISPLAY DISPLAY_DOUBLE_LCD
+#define USE_DISPLAY DISPLAY_DOUBLE_LCD_0108
 
 #include "chess_clock.h"
 #include "buzzer.h"
@@ -31,11 +31,18 @@ SerialDisplay display = SerialDisplay(&Serial);
 #include "src/display/single_ssd.h"
 SSD1306Display display;
 
-#elif USE_DISPLAY == DISPLAY_DOUBLE_LCD
+#elif USE_DISPLAY == DISPLAY_DOUBLE_LCD_0216
 
 #include "src/display/double_lcd0216.h"
 
 LCDDisplay display(PCF8574_ADDR_0, PCF8574_ADDR_1);
+
+#elif USE_DISPLAY == DISPLAY_DOUBLE_LCD_0108
+
+#include "src/display/double_lcd0108.h"
+
+LCDDisplay8 display(PCF8574_ADDR_0, PCF8574_ADDR_1);
+
 #endif
 
 extEEPROM eeprom(kbits_2, 1, 8);
@@ -103,9 +110,9 @@ void setup() {
   status = read_settings_from_eeprom(&eeprom);
   if (status != 0) {
     if (status == GS_ERR_VALUE_MISMATCH) {
-      displayAndWait("Error reading from EEPROM: Header mismatch");
+      displayAndWait("Header mismatch");
     } else if (status == -EEPROM_ADDR_ERR) {
-      displayAndWait("Error reading from EEPROM: read out of bounds");
+      displayAndWait("read out of bounds");
     } else {
       display.print("Error reading from EEPROM");
       blinkForeverForError(2, status);
@@ -153,8 +160,8 @@ bool handlePauseButton(GameState *gs, int buttonState, unsigned long now) {
   if (now - prevStateChangeTime >= LONG_PRESS_DELAY) {
     // long press : SELECT_SETTINGS -> EDIT_SETTINGS
     if (gs->clock_mode == CM_SELECT_SETTINGS) {
+      gs->option_index = OI_P2_HOURS;
       gs->clock_mode = CM_EDIT_SETTINGS;
-      gs->option_index = 0;
       buttonPresses[CENTER_IDX] = 0;
       beep(BE_EDIT_SETTINGS);
       return true;
@@ -205,8 +212,7 @@ bool handlePauseButton(GameState *gs, int buttonState, unsigned long now) {
 
   // 1x short press : EDIT_SETTINGS -> EDIT_SETTINGS        "next option"
   if (gs->clock_mode == CM_EDIT_SETTINGS) {
-    gs->option_index++;
-    gs->option_index %= OI_COUNT;
+    gs->option_index = (gs->option_index + 1) % OI_COUNT;
     return true;
   }
 

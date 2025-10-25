@@ -14,7 +14,8 @@ SRC		:= $(wildcard *.ino *.cpp) $(shell find src -name '*.cpp')
 HDRS		:= $(wildcard *.h) $(shell find src -name '*.h')
 HEX		:= $(BUILD_DIR)/$(SRCINO).hex
 ELF		:= $(BUILD_DIR)/$(SRCINO).elf
-AVRDUDE_FLAGS 	:= -B 125kHz -v -p$(MC_CHIP) -cstk500v1 -b19200
+PROGRAMMER	?= stk500v1
+AVRDUDE_FLAGS 	:= -v -p$(MC_CHIP) -c$(PROGRAMMER) -b19200
 
 all: $(ELF) upload
 .PHONY: all

@@ -12,15 +12,17 @@
 #include "chess_clock.h"
 #include "buzzer.h"
 
-unsigned long lastStateChangeTime[3] = { 0, 0, 0 };
-unsigned long lastStateChange[3] = { 0, 0, 0 };
-int lastState[3] = { HIGH, HIGH, HIGH };
-byte buttonPresses[3] = { 0, 0, 0 };
-bool ignoreNextRelease[3] = { false, false, false };
-unsigned long lastIncr = 0;
-unsigned long lastPrinted = 0;
+// TODO: refactor button presses into a struct to track this better
+unsigned long last_state_changed_time[3] = { 0, 0, 0 };
+int last_state[3] = { HIGH, HIGH, HIGH };
+byte unprocessed_presses[3] = { 0, 0, 0 };
+bool ignore_next_release[3] = { false, false, false };
+
+unsigned long last_incremented_at = 0;
+unsigned long last_printed_at = 0;
 
 GameState game_state = GameState(&all_game_settings[selected_game_settings]);
+
 #if USE_DISPLAY == DISPLAY_SERIAL
 
 #include "src/display/serial.h"
@@ -47,7 +49,7 @@ LCDDisplay8 display(PCF8574_ADDR_0, PCF8574_ADDR_1);
 
 extEEPROM eeprom(kbits_2, 1, 8);
 
-void blinkForeverForError(uint8_t code, int status) {
+void blink_forever_for_error(uint8_t code, int status) {
   // if status == 0, return immediately; there was no error.
   if (status == 0) {
     return;
@@ -78,7 +80,7 @@ void blinkForeverForError(uint8_t code, int status) {
   }
 }
 
-void displayAndWait(const char *message) {
+void display_and_wait(const char *message) {
   display.print(message);
   while (digitalRead(PAUSE_BUTTON_PIN) == HIGH
          && digitalRead(PLAYER1_BUTTON_PIN) == HIGH
@@ -103,19 +105,19 @@ void setup() {
   pinMode(BUZZER_PIN, OUTPUT);
 
   // Connect to EEPROM; blink forever for error if something goes wrong.
-  blinkForeverForError(1, eeprom.begin(extEEPROM::twiClock400kHz));
+  blink_forever_for_error(1, eeprom.begin(extEEPROM::twiClock400kHz));
 
   // Read settings from EEPROM; print some things and blink forever for error if
   // something goes wrong.
   status = read_settings_from_eeprom(&eeprom);
   if (status != 0) {
     if (status == GS_ERR_VALUE_MISMATCH) {
-      displayAndWait("Header mismatch");
+      display_and_wait("Header mismatch");
     } else if (status == -EEPROM_ADDR_ERR) {
-      displayAndWait("read out of bounds");
+      display_and_wait("read out of bounds");
     } else {
       display.print("Error reading from EEPROM");
-      blinkForeverForError(2, status);
+      blink_forever_for_error(2, status);
     }
     delay(DEBOUNCE_DELAY);
     load_default_settings();
@@ -125,53 +127,54 @@ void setup() {
   game_state.reset();
 }
 
-/* handlePauseButton returns true if it modifies any state, false otherwise. */
-bool handlePauseButton(GameState *gs, int buttonState, unsigned long now) {
+/* handles a state changed the pause button's state changing;
+ * returns: true if it modifies any state, false otherwise. */
+bool handle_pause_button(GameState *gs, int button_state, unsigned long now) {
 
   if (
     // Return false (unchanged) early if:
     // 1. we aren't past the debounce delay, or
-    (now - lastStateChangeTime[CENTER_IDX] < DEBOUNCE_DELAY)
-    // 2. the buttonState hasn't changed from what was last recorded
-    || (buttonState == lastState[CENTER_IDX])) {
+    (now - last_state_changed_time[CENTER_IDX] < DEBOUNCE_DELAY)
+    // 2. the button_state hasn't changed from what was last recorded
+    || (button_state == last_state[CENTER_IDX])) {
     return false;
   }
 
   // Preserve the prior state change time (i.e., the state change before this one)
-  unsigned long prevStateChangeTime = lastStateChangeTime[CENTER_IDX];
+  unsigned long prev_state_changed_time = last_state_changed_time[CENTER_IDX];
 
-  // Update the button state and the lastStateChangeTime
-  lastState[CENTER_IDX] = buttonState;
-  lastStateChangeTime[CENTER_IDX] = now;
+  // Update the last button state and the last state changed time
+  last_state[CENTER_IDX] = button_state;
+  last_state_changed_time[CENTER_IDX] = now;
 
   // For the moment, we don't do anything when the button is pressed -- just when released.
-  if (buttonState == LOW) {
+  if (button_state == LOW) {
     return false;
   }
 
   // handle pause button released
 
-  if (ignoreNextRelease[CENTER_IDX]) {
-    ignoreNextRelease[CENTER_IDX] = false;
+  if (ignore_next_release[CENTER_IDX]) {
+    ignore_next_release[CENTER_IDX] = false;
     return false;
   }
 
   // long press
-  if (now - prevStateChangeTime >= LONG_PRESS_DELAY) {
+  if (now - prev_state_changed_time >= LONG_PRESS_DELAY) {
     // long press : SELECT_SETTINGS -> EDIT_SETTINGS
     if (gs->clock_mode == CM_SELECT_SETTINGS) {
       gs->option_index = OI_P2_HOURS;
       gs->clock_mode = CM_EDIT_SETTINGS;
-      buttonPresses[CENTER_IDX] = 0;
+      unprocessed_presses[CENTER_IDX] = 0;
       beep(BE_EDIT_SETTINGS);
       return true;
       // long press, save changes : EDIT_SETTINGS -> SELECT_SETTINGS
     } else if (gs->clock_mode == CM_EDIT_SETTINGS) {
       gs->clock_mode = CM_SELECT_SETTINGS;
-      buttonPresses[CENTER_IDX] = 0;
+      unprocessed_presses[CENTER_IDX] = 0;
       gs->option_index = -1;
       gs->reset();
-      blinkForeverForError(3, write_settings_to_eeprom(&eeprom));
+      blink_forever_for_error(3, write_settings_to_eeprom(&eeprom));
       beep(BE_SAVE_SETTINGS);
       return true;
     }
@@ -179,13 +182,13 @@ bool handlePauseButton(GameState *gs, int buttonState, unsigned long now) {
     // EDIT SETTINGS), it behaves like a short press.
   }
   // short press
-  buttonPresses[CENTER_IDX]++;
+  unprocessed_presses[CENTER_IDX]++;
 
   // 1x short press : ACTIVE -> PAUSED                      "pause"
   if (gs->clock_mode == CM_ACTIVE) {
     gs->clock_mode = CM_PAUSED;
     // make sure the counter is at 1
-    buttonPresses[CENTER_IDX] = 1;
+    unprocessed_presses[CENTER_IDX] = 1;
     analogWrite(PLAYER1_LED_PIN, LED_OFF_LEVEL);
     analogWrite(PLAYER2_LED_PIN, LED_OFF_LEVEL);
     beep(BE_PAUSE);
@@ -193,11 +196,11 @@ bool handlePauseButton(GameState *gs, int buttonState, unsigned long now) {
   }
 
   // 3x short press (or more) : PAUSED -> SELECT_SETTINGS   "reset"
-  if (gs->clock_mode == CM_PAUSED && buttonPresses[CENTER_IDX] > 2) {
+  if (gs->clock_mode == CM_PAUSED && unprocessed_presses[CENTER_IDX] > 2) {
     gs->clock_mode = CM_SELECT_SETTINGS;
     gs->reset();
     beep(BE_RESET);
-    buttonPresses[CENTER_IDX] = 0;
+    unprocessed_presses[CENTER_IDX] = 0;
     return true;
   }
 
@@ -219,110 +222,111 @@ bool handlePauseButton(GameState *gs, int buttonState, unsigned long now) {
   return false;
 }
 
-/* handlePlayerButton returns true if it modifies any state, false otherwise. */
-bool handlePlayerButton(
-  GameState *gs, int buttonState, unsigned long now, uint8_t playerIndex) {
-  if (now - lastStateChangeTime[playerIndex] < DEBOUNCE_DELAY) {
+/* handle press/release events for the player buttons;
+ * returns: true if the state has changed, false otherwise. */
+bool handle_player_button(
+  GameState *gs, int button_state, unsigned long now, uint8_t player_index) {
+  if (now - last_state_changed_time[player_index] < DEBOUNCE_DELAY) {
     return false;
   }
-  if (buttonState == lastState[playerIndex]) {
+  if (button_state == last_state[player_index]) {
     return false;
   }
-  lastState[playerIndex] = buttonState;
-  lastStateChangeTime[playerIndex] = now;
+  last_state[player_index] = button_state;
+  last_state_changed_time[player_index] = now;
 
   // We don't take action when buttons are pressed, only released
-  if (buttonState == LOW) {
+  if (button_state == LOW) {
     return false;
   }
   // handle released button
 
   // if the game is active, and it isn't my turn, then my button does nothing
-  if (gs->clock_mode == CM_ACTIVE && gs->whoseTurn != playerIndex) {
+  if (gs->clock_mode == CM_ACTIVE && gs->whose_turn != player_index) {
     return false;
   }
 
   // if the center button is pressed, treat this as a "special toggle"
-  if (lastState[CENTER_IDX] == LOW) {
-    ignoreNextRelease[CENTER_IDX] = true;
-    buttonPresses[playerIndex]++;
-    if (buttonPresses[playerIndex] >= 3) {
+  if (last_state[CENTER_IDX] == LOW) {
+    ignore_next_release[CENTER_IDX] = true;
+    unprocessed_presses[player_index]++;
+    if (unprocessed_presses[player_index] >= 3) {
       beep(BE_SPECIAL_TOGGLE);
-      display.specialToggle();
-      buttonPresses[playerIndex] = 0;
+      display.special_toggle();
+      unprocessed_presses[player_index] = 0;
     }
     return true;
   }
 
-  if (ignoreNextRelease[playerIndex]) {
-    ignoreNextRelease[playerIndex] = false;
-    buttonPresses[playerIndex] = 0;
+  if (ignore_next_release[player_index]) {
+    ignore_next_release[player_index] = false;
+    unprocessed_presses[player_index] = 0;
     return false;
   }
 
   // if we're in settings editing mode, handle that
   if (gs->clock_mode == CM_EDIT_SETTINGS) {
-    game_settings_t *curr_settings = &all_game_settings[selected_game_settings];
+    GameSettings *curr_settings = &all_game_settings[selected_game_settings];
     switch (gs->option_index) {
       case -1:
         return false;
       case OI_FLAG_BEEP:
-        curr_settings->flagBeep = !curr_settings->flagBeep;
+        curr_settings->flag_beep = !curr_settings->flag_beep;
         return true;
       case OI_TURN_BEEP:
-        curr_settings->turnBeep = !curr_settings->turnBeep;
+        curr_settings->turn_beep = !curr_settings->turn_beep;
         return true;
       case OI_P1_HOURS:
-        curr_settings->player_settings[PLAYER1_IDX].totalMillis +=
-          ((playerIndex == PLAYER2_IDX) ? (-1) : (1)) * 3600000;
+        curr_settings->player_settings[PLAYER1_IDX].total_millis +=
+          ((player_index == PLAYER2_IDX) ? (-1) : (1)) * 3600000;
         return true;
       case OI_P2_HOURS:
-        curr_settings->player_settings[PLAYER2_IDX].totalMillis +=
-          ((playerIndex == PLAYER2_IDX) ? (-1) : (1)) * 3600000;
+        curr_settings->player_settings[PLAYER2_IDX].total_millis +=
+          ((player_index == PLAYER2_IDX) ? (-1) : (1)) * 3600000;
         return true;
       case OI_P1_TEN_MINUTES:
-        curr_settings->player_settings[PLAYER1_IDX].totalMillis +=
-          ((playerIndex == PLAYER2_IDX) ? (-1) : (1)) * 600000;
+        curr_settings->player_settings[PLAYER1_IDX].total_millis +=
+          ((player_index == PLAYER2_IDX) ? (-1) : (1)) * 600000;
         return true;
       case OI_P1_MINUTES:
-        curr_settings->player_settings[PLAYER1_IDX].totalMillis +=
-          ((playerIndex == PLAYER2_IDX) ? (-1) : (1)) * 60000;
+        curr_settings->player_settings[PLAYER1_IDX].total_millis +=
+          ((player_index == PLAYER2_IDX) ? (-1) : (1)) * 60000;
         return true;
       case OI_P2_TEN_MINUTES:
-        curr_settings->player_settings[PLAYER2_IDX].totalMillis +=
-          ((playerIndex == PLAYER2_IDX) ? (-1) : (1)) * 600000;
+        curr_settings->player_settings[PLAYER2_IDX].total_millis +=
+          ((player_index == PLAYER2_IDX) ? (-1) : (1)) * 600000;
         return true;
       case OI_P2_MINUTES:
-        curr_settings->player_settings[PLAYER2_IDX].totalMillis +=
-          ((playerIndex == PLAYER2_IDX) ? (-1) : (1)) * 60000;
+        curr_settings->player_settings[PLAYER2_IDX].total_millis +=
+          ((player_index == PLAYER2_IDX) ? (-1) : (1)) * 60000;
         return true;
       case OI_P1_TEN_SECONDS:
-        curr_settings->player_settings[PLAYER1_IDX].totalMillis +=
-          ((playerIndex == PLAYER2_IDX) ? (-1) : (1)) * 10000;
+        curr_settings->player_settings[PLAYER1_IDX].total_millis +=
+          ((player_index == PLAYER2_IDX) ? (-1) : (1)) * 10000;
         return true;
       case OI_P1_SECONDS:
-        curr_settings->player_settings[PLAYER1_IDX].totalMillis +=
-          ((playerIndex == PLAYER2_IDX) ? (-1) : (1)) * 1000;
+        curr_settings->player_settings[PLAYER1_IDX].total_millis +=
+          ((player_index == PLAYER2_IDX) ? (-1) : (1)) * 1000;
         return true;
       case OI_P2_TEN_SECONDS:
-        curr_settings->player_settings[PLAYER2_IDX].totalMillis +=
-          ((playerIndex == PLAYER2_IDX) ? (-1) : (1)) * 10000;
+        curr_settings->player_settings[PLAYER2_IDX].total_millis +=
+          ((player_index == PLAYER2_IDX) ? (-1) : (1)) * 10000;
         return true;
       case OI_P2_SECONDS:
-        curr_settings->player_settings[PLAYER2_IDX].totalMillis +=
-          ((playerIndex == PLAYER2_IDX) ? (-1) : (1)) * 1000;
+        curr_settings->player_settings[PLAYER2_IDX].total_millis +=
+          ((player_index == PLAYER2_IDX) ? (-1) : (1)) * 1000;
         return true;
       case OI_TURN_TEN_SECONDS:
-        curr_settings->player_settings[PLAYER1_IDX].perTurnIncrMillis +=
-          ((playerIndex == PLAYER2_IDX) ? (-1) : (1)) * 10000;
-        curr_settings->player_settings[PLAYER2_IDX].perTurnIncrMillis +=
-          ((playerIndex == PLAYER2_IDX) ? (-1) : (1)) * 10000;
+        curr_settings->player_settings[PLAYER1_IDX].per_turn_incr_millis +=
+          ((player_index == PLAYER2_IDX) ? (-1) : (1)) * 10000;
+        curr_settings->player_settings[PLAYER2_IDX].per_turn_incr_millis +=
+          ((player_index == PLAYER2_IDX) ? (-1) : (1)) * 10000;
         return true;
       case OI_TURN_SECONDS:
-        curr_settings->player_settings[PLAYER1_IDX].perTurnIncrMillis +=
-          ((playerIndex == PLAYER2_IDX) ? (-1) : (1)) * 1000;
-        curr_settings->player_settings[PLAYER2_IDX].perTurnIncrMillis +=
-          ((playerIndex == PLAYER2_IDX) ? (-1) : (1)) * 1000;
+        curr_settings->player_settings[PLAYER1_IDX].per_turn_incr_millis +=
+          ((player_index == PLAYER2_IDX) ? (-1) : (1)) * 1000;
+        curr_settings->player_settings[PLAYER2_IDX].per_turn_incr_millis +=
+          ((player_index == PLAYER2_IDX) ? (-1) : (1)) * 1000;
         return true;
       default:
         return false;
@@ -330,50 +334,51 @@ bool handlePlayerButton(
   }
 
   // Otherwise, we change turns.
-  gs->setTurn((playerIndex == PLAYER1_IDX) ? PLAYER2_IDX : PLAYER1_IDX);
+  gs->set_turn((player_index == PLAYER1_IDX) ? PLAYER2_IDX : PLAYER1_IDX);
   analogWrite(
     PLAYER1_LED_PIN,
-    (gs->whoseTurn == PLAYER1_IDX) ? LED_ON_LEVEL : LED_OFF_LEVEL);
+    (gs->whose_turn == PLAYER1_IDX) ? LED_ON_LEVEL : LED_OFF_LEVEL);
   analogWrite(
     PLAYER2_LED_PIN,
-    (gs->whoseTurn == PLAYER2_IDX) ? LED_ON_LEVEL : LED_OFF_LEVEL);
+    (gs->whose_turn == PLAYER2_IDX) ? LED_ON_LEVEL : LED_OFF_LEVEL);
   // Timer starts now!
-  lastIncr = now;
-  if (gs->settings->turnBeep) {
+  last_incremented_at = now;
+  if (gs->settings->turn_beep) {
     beep(BE_TURN_CHANGE);
   }
   return true;
 }
 
-bool handleButtonReads(GameState *gs, unsigned long now) {
-  return (handlePauseButton(gs, digitalRead(PAUSE_BUTTON_PIN), now)
-          || handlePlayerButton(gs, digitalRead(PLAYER1_BUTTON_PIN), now, PLAYER1_IDX)
-          || handlePlayerButton(gs, digitalRead(PLAYER2_BUTTON_PIN), now, PLAYER2_IDX));
+bool handle_button_reads(GameState *gs, unsigned long now) {
+  return (handle_pause_button(gs, digitalRead(PAUSE_BUTTON_PIN), now)
+          || handle_player_button(gs, digitalRead(PLAYER1_BUTTON_PIN), now, PLAYER1_IDX)
+          || handle_player_button(gs, digitalRead(PLAYER2_BUTTON_PIN), now, PLAYER2_IDX));
 }
 
-/* handleTimerIncr returns true if it modifies any counters, false otherwise. */
-bool handleTimerIncr(GameState *gs, unsigned long now) {
-  bool countersModified = false;
+/* handle the timer incrementing;
+ * returns: true if any counters are modified; otherwise it returns false. */
+bool handle_timer_incr(GameState *gs, unsigned long now) {
+  bool counters_modified = false;
   if (gs->clock_mode != CM_ACTIVE) {
-    return countersModified;
+    return counters_modified;
   }
-  unsigned long decr = now - lastIncr;
-  lastIncr = now;
+  unsigned long decr = now - last_incremented_at;
+  last_incremented_at = now;
 
   // if there's no normal time left, return immediately
-  if (gs->curr_player_state->remainingMillis == 0) {
-    return countersModified;
-  } else if (gs->curr_player_state->remainingMillis > decr) {
+  if (gs->curr_player_state->remaining_millis == 0) {
+    return counters_modified;
+  } else if (gs->curr_player_state->remaining_millis > decr) {
     // otherwise, if there's more remaining time than the decrement, decrement it
     // as usual and return true.
-    gs->curr_player_state->remainingMillis -= decr;
+    gs->curr_player_state->remaining_millis -= decr;
     return true;
   } else {
     // otherwise, if there's less remaining time than the decrement, go the
     // "out of time" route:
-    gs->curr_player_state->remainingMillis = 0;
-    gs->curr_player_state->outOfTime = true;
-    if (gs->settings->flagBeep) {
+    gs->curr_player_state->remaining_millis = 0;
+    gs->curr_player_state->out_of_time = true;
+    if (gs->settings->flag_beep) {
       beep(BE_FLAG);
     }
     return true;
@@ -382,22 +387,22 @@ bool handleTimerIncr(GameState *gs, unsigned long now) {
 
 void loop() {
   unsigned long now = millis();
-  // Both handleButtonReads and handleTimerIncr will return true only if they've changed a value
+  // Both hangle_button_reads and handle_timer_incr will return true only if they've changed a value
   // in the game_state object.
-  bool gameModeChanged = handleButtonReads(&game_state, now);
-  bool timersChanged = handleTimerIncr(&game_state, now);
+  bool game_mode_changed = handle_button_reads(&game_state, now);
+  bool timers_changed = handle_timer_incr(&game_state, now);
 
   if (
     // We render the display if:
     // 1. we're in SELECT_SETTINGS or EDIT_SETTINGS modes
     (game_state.clock_mode == CM_SELECT_SETTINGS || game_state.clock_mode == CM_EDIT_SETTINGS)
     // 2. the game mode has changed (ex., player turn changed), or
-    || gameModeChanged
+    || game_mode_changed
     // 3. the timers have changed, and it's been a PRINT_INTERVAL since our last render
-    || (timersChanged && (now - lastPrinted) >= PRINT_INTERVAL)
+    || (timers_changed && (now - last_printed_at) >= PRINT_INTERVAL)
     // 4. the timers have changed, and the current player has no time remaining
-    || (timersChanged && game_state.curr_player_state->remainingMillis == 0)) {
-    display.renderGameState(&game_state);
-    lastPrinted = now;
+    || (timers_changed && game_state.curr_player_state->remaining_millis == 0)) {
+    display.render_game_state(&game_state);
+    last_printed_at = now;
   }
 }

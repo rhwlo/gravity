@@ -11,7 +11,7 @@ extEEPROM eeprom(kbits_2, 1, 8);
 byte membuffer[256];
 #endif
 
-void eepromDebugSetup() {
+void eeprom_debug_setup() {
     pinMode(RIGHT_BUTTON_PIN, INPUT_PULLUP);
     pinMode(LEFT_BUTTON_PIN, INPUT_PULLUP);
     pinMode(CENTER_BUTTON_PIN, INPUT_PULLUP);
@@ -40,7 +40,7 @@ void eepromDebugSetup() {
     #endif // MEM_DEBUG
 }
 
-void doWriteIncrEeprom() {
+void do_write_incr_eeprom() {
     unsigned long addr = 0;
     byte value = 0x00, status = 0x00;
     for (addr = 0; addr < eeprom.length(); addr++) {
@@ -66,14 +66,14 @@ void doWriteIncrEeprom() {
     }
 }
 
-void printHex(byte value) {
+void print_hex(byte value) {
     if (value < 0x10) {
         lcd.print('0');
     }
     lcd.print(value, HEX);
 }
 
-void doReadEeprom() {
+void do_read_eeprom() {
     unsigned long addr = 0;
     int i;
     byte status = 0x00, values[8] = {0, 0, 0, 0, 0, 0, 0, 0};
@@ -83,16 +83,16 @@ void doReadEeprom() {
         lcd.clear();
         lcd.setCursor(0, 0);
         if (status == 0) {
-            printHex(addr);
+            print_hex(addr);
             for (i = 0; i < 4; i++) {
                 lcd.print(' ');
-                printHex(values[i]);
+                print_hex(values[i]);
             }
             lcd.setCursor(0, 1);
             lcd.print("  ");
             for (i = 4; i < 8; i++) {
                 lcd.print(' ');
-                printHex(values[i]);
+                print_hex(values[i]);
             }
         } else {
             lcd.print("read(");
@@ -123,7 +123,7 @@ void doReadEeprom() {
     }
 }
 
-void doBlankEeprom() {
+void do_blank_eeprom() {
     unsigned long addr;
     for (addr = 0; addr < eeprom.length(); addr++) {
         eeprom.write(addr, 0x00);
@@ -131,29 +131,29 @@ void doBlankEeprom() {
 }
 
 #ifdef MEM_DEBUG
-void doWipeBytes() {
+void do_wipe_bytes() {
     uint16_t i;
     for (i = 0; i < 256; i++) {
         membuffer[i] = 0;
     }
 }
 
-void doViewBytes() {
+void do_view_bytes() {
     unsigned long offset = 0;
     int i;
     while (true) {
         lcd.clear();
         lcd.setCursor(0, 0);
-        printHex(offset);
+        print_hex(offset);
         lcd.setCursor(2, 0);
         for (i = 0; i < 4; i++) {
             lcd.print(' ');
-            printHex(membuffer[offset + i]);
+            print_hex(membuffer[offset + i]);
         }
         lcd.setCursor(2, 1);
         for (i = 4; i < 8; i++) {
             lcd.print(' ');
-            printHex(membuffer[offset + i]);
+            print_hex(membuffer[offset + i]);
         }
         delay(500);
         while (true) {
@@ -176,8 +176,8 @@ void doViewBytes() {
     }
 }
 
-void memDebugLoop() {
-    bool writeSettings = false, viewBytes = false, wipeBytes = false;
+void mem_debug_loop() {
+    bool write_settings = false, view_bytes = false, wipe_bytes = false;
     int status = 0;
     lcd.clear();
     lcd.setCursor(0, 0);
@@ -189,12 +189,12 @@ void memDebugLoop() {
             break;
         }
         if (digitalRead(RIGHT_BUTTON_PIN) == LOW) {
-            wipeBytes = true;
+            wipe_bytes = true;
             break;
         }
     }
-    if (wipeBytes) {
-        doWipeBytes();
+    if (wipe_bytes) {
+        do_wipe_bytes();
     }
     delay(100);
     lcd.clear();
@@ -207,11 +207,11 @@ void memDebugLoop() {
             break;
         }
         if (digitalRead(RIGHT_BUTTON_PIN) == LOW) {
-            writeSettings = true;
+            write_settings = true;
             break;
         }
     }
-    if (writeSettings) {
+    if (write_settings) {
         status = write_settings_to_bytes(membuffer);
         lcd.clear();
         lcd.setCursor(0, 0);
@@ -234,26 +234,26 @@ void memDebugLoop() {
             break;
         }
         if (digitalRead(RIGHT_BUTTON_PIN) == LOW) {
-            viewBytes = true;
+            view_bytes = true;
             break;
         }
     }
-    if (viewBytes) {
-        doViewBytes();
+    if (view_bytes) {
+        do_view_bytes();
     }
     delay(100);
 } 
 #endif // MEM_DEBUG
 
-void waitForState(uint8_t pin, int state) {
+void wait_for_state(uint8_t pin, int state) {
     while (digitalRead(pin) != state) {
         delay(20);
     }
     return;
 }
 
-void eepromDebugLoop() {
-    bool readEeprom = false, blankEeprom = false, writeSettings = false;
+void eeprom_debug_loop() {
+    bool read_eeprom = false, blank_eeprom = false, write_settings = false;
     int status = 0;
     lcd.clear();
     lcd.setCursor(0, 0);
@@ -262,17 +262,17 @@ void eepromDebugLoop() {
     lcd.print("no <-> yes");
     while (true) {
         if (digitalRead(LEFT_BUTTON_PIN) == LOW) {
-            waitForState(LEFT_BUTTON_PIN, HIGH);
+            wait_for_state(LEFT_BUTTON_PIN, HIGH);
             break;
         }
         if (digitalRead(RIGHT_BUTTON_PIN) == LOW) {
-            waitForState(RIGHT_BUTTON_PIN, HIGH);
-            readEeprom = true;
+            wait_for_state(RIGHT_BUTTON_PIN, HIGH);
+            read_eeprom = true;
             break;
         }
     }
-    if (readEeprom) {
-        doReadEeprom();
+    if (read_eeprom) {
+        do_read_eeprom();
     }
 
     lcd.clear();
@@ -282,17 +282,17 @@ void eepromDebugLoop() {
     lcd.print("no <-> yes");
     while (true) {
         if (digitalRead(LEFT_BUTTON_PIN) == LOW) {
-            waitForState(LEFT_BUTTON_PIN, HIGH);
+            wait_for_state(LEFT_BUTTON_PIN, HIGH);
             break;
         }
         if (digitalRead(RIGHT_BUTTON_PIN) == LOW) {
-            blankEeprom = true;
-            waitForState(RIGHT_BUTTON_PIN, HIGH);
+            blank_eeprom = true;
+            wait_for_state(RIGHT_BUTTON_PIN, HIGH);
             break;
         }
     }
-    if (blankEeprom) {
-        doBlankEeprom();
+    if (blank_eeprom) {
+        do_blank_eeprom();
     }
 
     lcd.clear();
@@ -302,16 +302,16 @@ void eepromDebugLoop() {
     lcd.print("no <-> yes");
     while (true) {
         if (digitalRead(LEFT_BUTTON_PIN) == LOW) {
-            waitForState(LEFT_BUTTON_PIN, HIGH);
+            wait_for_state(LEFT_BUTTON_PIN, HIGH);
             break;
         }
         if (digitalRead(RIGHT_BUTTON_PIN) == LOW) {
-            writeSettings = true;
-            waitForState(RIGHT_BUTTON_PIN, HIGH);
+            write_settings = true;
+            wait_for_state(RIGHT_BUTTON_PIN, HIGH);
             break;
         }
     }
-    if (writeSettings) {
+    if (write_settings) {
         status = write_settings_to_eeprom(&eeprom);
     }
     if (status < 0) {
@@ -327,7 +327,7 @@ void eepromDebugLoop() {
         lcd.print(status);
         lcd.print(" bytes");
     }
-    waitForState(CENTER_BUTTON_PIN, LOW);
-    waitForState(CENTER_BUTTON_PIN, HIGH);
+    wait_for_state(CENTER_BUTTON_PIN, LOW);
+    wait_for_state(CENTER_BUTTON_PIN, HIGH);
 }
 #endif // USE_MEMORY_DEBUGGING

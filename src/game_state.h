@@ -12,6 +12,7 @@
 #define VALIDATION_BYTE_1 0xC5
 #define GAME_SETTINGS_LEN 4
 
+// Option Indexes (OI_...)
 #define OI_P2_HOURS             0
 #define OI_P2_TEN_MINUTES       1
 #define OI_P2_MINUTES           2
@@ -37,33 +38,33 @@
 #define GS_ERR_TIMEOUT          -5
 #define GS_ERR_VALUE_MISMATCH   -6
 
-enum clock_mode_t {
+enum ClockMode {
     CM_PAUSED,
     CM_ACTIVE,
     CM_SELECT_SETTINGS,
     CM_EDIT_SETTINGS
 };
 
-struct player_settings_t
+struct PlayerSettings
 {
-    unsigned long  totalMillis;
-    unsigned short perTurnIncrMillis;
+    unsigned long  total_millis;
+    unsigned short per_turn_incr_millis;
 };
 
-struct game_settings_t
+struct GameSettings
 {
-    player_settings_t player_settings[NUM_PLAYERS];
-    bool flagBeep;      // beep when a player runs out of time
-    bool turnBeep;      // beep when we change whose turn it is
+    PlayerSettings player_settings[NUM_PLAYERS];
+    bool flag_beep;      // beep when a player runs out of time
+    bool turn_beep;      // beep when we change whose turn it is
 };
 
 
-int write_to_eeprom(extEEPROM *eeprom, unsigned long *eeprom_offset, player_settings_t *value);
-int write_to_eeprom(extEEPROM *eeprom, unsigned long *eeprom_offset, game_settings_t *value);
-int write_to_bytes(byte bytes[], unsigned long *offset, player_settings_t *value);
-int write_to_bytes(byte bytes[], unsigned long *offset, game_settings_t *value);
-int read_from_eeprom(extEEPROM *eeprom, unsigned long *eeprom_offset, player_settings_t *value);
-int read_from_eeprom(extEEPROM *eeprom, unsigned long *eeprom_offset, game_settings_t *value);
+int write_to_eeprom(extEEPROM *eeprom, unsigned long *eeprom_offset, PlayerSettings *value);
+int write_to_eeprom(extEEPROM *eeprom, unsigned long *eeprom_offset, GameSettings *value);
+int write_to_bytes(byte bytes[], unsigned long *offset, PlayerSettings *value);
+int write_to_bytes(byte bytes[], unsigned long *offset, GameSettings *value);
+int read_from_eeprom(extEEPROM *eeprom, unsigned long *eeprom_offset, PlayerSettings *value);
+int read_from_eeprom(extEEPROM *eeprom, unsigned long *eeprom_offset, GameSettings *value);
 
 int write_settings_to_eeprom(extEEPROM *eeprom);
 int write_settings_to_eeprom(extEEPROM *eeprom, unsigned long *eeprom_position);
@@ -74,25 +75,27 @@ int read_settings_from_eeprom(extEEPROM *eeprom, unsigned long *eeprom_position)
 
 void load_default_settings(void);
 
-struct player_state_t {
-    bool outOfTime;
-    unsigned long remainingMillis;
+struct PlayerState {
+    bool out_of_time;
+    unsigned long remaining_millis;
 };
 
 class GameState {
     public:
-        GameState(game_settings_t *game_settings);
-        bool setTurn(unsigned short newTurn);
-        clock_mode_t clock_mode;
-        int option_index;
+        GameState(GameSettings *game_settings);
+
+        bool set_turn(unsigned short new_turn);
         void reset(void);
-        unsigned short whoseTurn;
-        player_state_t player_states[NUM_PLAYERS];
-        player_state_t *curr_player_state;
-        game_settings_t *settings;
+
+        ClockMode clock_mode;
+        int option_index;
+        unsigned short whose_turn;
+        PlayerState player_states[NUM_PLAYERS];
+        PlayerState *curr_player_state;
+        GameSettings *settings;
 };
 
-extern game_settings_t all_game_settings[GAME_SETTINGS_LEN];
+extern GameSettings all_game_settings[GAME_SETTINGS_LEN];
 extern uint8_t selected_game_settings;
 
 

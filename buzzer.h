@@ -7,7 +7,7 @@
 #define BUZZER_TONE_FIFTH       932  // Bb
 #define BUZZER_TONE_SEVENTH     1108 // Db
 
-enum beep_event_t {
+enum BeepEvent {
     BE_FLAG,
     BE_PAUSE,
     BE_RESET,
@@ -19,6 +19,6 @@ enum beep_event_t {
     BE_SPECIAL_TOGGLE
 };
 
-void beep(beep_event_t event);
+void beep(BeepEvent event);
 
 #endif

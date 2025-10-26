@@ -9,8 +9,8 @@
 #define LEFT_LED_PIN            6
 #define CENTER_BUTTON_PIN       A3
 
-void eepromDebugLoop();
-void eepromDebugSetup();
+void eeprom_debug_loop();
+void eeprom_debug_setup();
 
 #endif // MEMORY_DEBUGGING_H
 #endif // USE_MEMORY_DEBUGGING

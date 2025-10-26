@@ -15,7 +15,7 @@ void SSD1306Display::begin(void) {
     ssd.begin(SSD1306_SWITCHCAPVCC, 0x3C);
 }
 
-void SSD1306Display::prettyPrintTime(unsigned long time) {
+void SSD1306Display::pretty_print_time(unsigned long time) {
     unsigned long remaining_time = time;
     if (remaining_time >= HOUR_MILLIS) {
         ssd.print((int) (remaining_time / HOUR_MILLIS), 10);
@@ -48,16 +48,16 @@ void SSD1306Display::prettyPrintTime(unsigned long time) {
     }
 }
 
-void SSD1306Display::specialToggle(void) {
+void SSD1306Display::special_toggle(void) {
     return;
 }
 
-void SSD1306Display::renderGameState(GameState *game_state) {
+void SSD1306Display::render_game_state(GameState *game_state) {
     uint16_t white_fg, white_bg;
     ssd.clearDisplay();
     ssd.setCursor(0,0);
     ssd.setTextSize(2);
-    if (game_state->whoseTurn == PLAYER_1) {
+    if (game_state->whose_turn == PLAYER_1) {
         white_fg = SSD1306_BLACK;
         white_bg = SSD1306_WHITE;
     } else {
@@ -66,18 +66,18 @@ void SSD1306Display::renderGameState(GameState *game_state) {
     }
     ssd.fillRect(0, 0, 128, 16, white_bg);
     ssd.setTextColor(white_fg);
-    if (game_state->player_states[PLAYER_1].outOfTime) {
+    if (game_state->player_states[PLAYER_1].out_of_time) {
         ssd.println("0:00:00 !");
     } else {
-        prettyPrintTime(game_state->player_states[PLAYER_1].remainingMillis);
+        pretty_print_time(game_state->player_states[PLAYER_1].remaining_millis);
     }
     ssd.println();
     ssd.fillRect(ssd.getCursorX(), ssd.getCursorY(), 128, 16, white_fg);
     ssd.setTextColor(white_bg);
-    if (game_state->player_states[PLAYER_2].outOfTime) {
+    if (game_state->player_states[PLAYER_2].out_of_time) {
         ssd.println("0:00:00 !");
     } else {
-        prettyPrintTime(game_state->player_states[PLAYER_2].remainingMillis);
+        pretty_print_time(game_state->player_states[PLAYER_2].remaining_millis);
     }
     ssd.println();
     ssd.display();

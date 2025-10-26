@@ -58,7 +58,7 @@ const uint8_t font_digits[10][4] = {
     DIGIT_9_MAP
 };
 
-void blankBuffer(char buffer[ROWS][COLS], char blank) {
+void blank_buffer(char buffer[ROWS][COLS], char blank) {
     for (uint8_t i = 0; i < ROWS; i++) {
         for (uint8_t j = 0; j < COLS; j++) {
             buffer[i][j] = blank;
@@ -66,19 +66,19 @@ void blankBuffer(char buffer[ROWS][COLS], char blank) {
     }
 }
 
-void blankBuffers(char buffers[2][ROWS][COLS], char blank) {
-    blankBuffer(buffers[0], blank);
-    blankBuffer(buffers[1], blank);
+void blank_buffers(char buffers[2][ROWS][COLS], char blank) {
+    blank_buffer(buffers[0], blank);
+    blank_buffer(buffers[1], blank);
 }
 
-void blankBuffers(char buffers[2][ROWS][COLS]) {
-    blankBuffers(buffers, CHAR_BLANK);
+void blank_buffers(char buffers[2][ROWS][COLS]) {
+    blank_buffers(buffers, CHAR_BLANK);
 }
 
 LCDDisplay::LCDDisplay(uint8_t addr_1, uint8_t addr_2) :
     player_1(addr_1, COLS, ROWS),
     player_2(addr_2, COLS, ROWS) {
-    blankBuffers(last_displayed);
+    blank_buffers(last_displayed);
     last_cursor_indices[0] = -1;
     last_cursor_indices[1] = -1;
     backlight = false;
@@ -122,7 +122,7 @@ void LCDDisplay::begin(void) {
     }
 }
 
-void pushDigit(char buffer[ROWS][COLS], uint8_t digit, uint8_t x_offset, uint8_t y_offset) {
+void push_digit(char buffer[ROWS][COLS], uint8_t digit, uint8_t x_offset, uint8_t y_offset) {
     if (digit >= 0 && digit <= 9) {
 #if FONT == FONT_WIDE
         buffer[y_offset + 0][x_offset + 0] = font_digits[digit][0];
@@ -140,7 +140,7 @@ void pushDigit(char buffer[ROWS][COLS], uint8_t digit, uint8_t x_offset, uint8_t
     }
 }
 
-int makeSettingsDisplayBuffer(char buffer[2][16], GameState *state, uint8_t player_number, game_settings_t *gs) {
+int make_settings_display_buffer(char buffer[2][16], GameState *state, uint8_t player_number, GameSettings *gs) {
     // Display settings like "00h30m00s   +00s"
     //                       "            -f-t"
     static const char default_buffer[2][16] = {
@@ -148,12 +148,12 @@ int makeSettingsDisplayBuffer(char buffer[2][16], GameState *state, uint8_t play
         {' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','-','f','-','t'}
     };
     memcpy(buffer, default_buffer, 2 * 16 * sizeof(default_buffer[0][0]));
-    uint8_t hours=(gs->player_settings[player_number].totalMillis / 1000 / 3600) % 100,
-        minutes=(gs->player_settings[player_number].totalMillis / 1000 / 60) % 60,
-        seconds=(gs->player_settings[player_number].totalMillis / 1000) % 60,
-        incr_seconds=gs->player_settings[player_number].perTurnIncrMillis / 1000;
-    byte beeps = (gs->flagBeep ? 0b010 : 0b000)
-               | (gs->turnBeep ? 0b001 : 0b000);
+    uint8_t hours=(gs->player_settings[player_number].total_millis / 1000 / 3600) % 100,
+        minutes=(gs->player_settings[player_number].total_millis / 1000 / 60) % 60,
+        seconds=(gs->player_settings[player_number].total_millis / 1000) % 60,
+        incr_seconds=gs->player_settings[player_number].per_turn_incr_millis / 1000;
+    byte beeps = (gs->flag_beep ? 0b010 : 0b000)
+               | (gs->turn_beep ? 0b001 : 0b000);
     if (hours / 10) {
         buffer[0][0] += (char) (hours / 10);
     }
@@ -215,8 +215,8 @@ int makeSettingsDisplayBuffer(char buffer[2][16], GameState *state, uint8_t play
     }
 }
 
-void makeOutOfTimeBuffer(char buffer[2][16]) {
-    blankBuffer(buffer, CHAR_BLANK);
+void make_out_of_time_buffer(char buffer[2][16]) {
+    blank_buffer(buffer, CHAR_BLANK);
     buffer[0][1] = 0x03;
     buffer[0][2] = 0x02;
     buffer[0][3] = 'u';
@@ -231,7 +231,7 @@ void makeOutOfTimeBuffer(char buffer[2][16]) {
     buffer[0][14] = 'e';
 }
 
-void makeTimeDisplayBuffer(char buffer[2][16], unsigned long time) {
+void make_time_display_buffer(char buffer[2][16], unsigned long time) {
 #if FONT == FONT_WIDE
     unsigned long rt = time;
     uint8_t digit;
@@ -244,35 +244,35 @@ void makeTimeDisplayBuffer(char buffer[2][16], unsigned long time) {
         // unit minutes
         rt /= SECOND_MILLIS * 60;
         digit = rt % 10;
-        pushDigit(buffer, digit, 11, 0);
+        push_digit(buffer, digit, 11, 0);
         // tens of minutes
         digit = (rt % 60) / 10;
-        pushDigit(buffer, digit, 8, 0);
+        push_digit(buffer, digit, 8, 0);
 
         // unit hours
         rt /= 60;
         digit = rt % 10;
-        pushDigit(buffer, digit, 4, 0);
+        push_digit(buffer, digit, 4, 0);
         // tens of hours
         digit = (rt % 100) / 10;
-        pushDigit(buffer, digit, 1, 0);
+        push_digit(buffer, digit, 1, 0);
     // if we have less than 99 minutes of time, do MM:SS
     } else {
         // unit seconds
         rt /= SECOND_MILLIS;
         digit = rt % 10;
-        pushDigit(buffer, digit, 11, 0);
+        push_digit(buffer, digit, 11, 0);
         // tens of seconds
         digit = (rt % 60) / 10;
-        pushDigit(buffer, digit, 8, 0);
+        push_digit(buffer, digit, 8, 0);
 
         // unit minutes
         rt /= 60;
         digit = rt % 10;
-        pushDigit(buffer, digit, 4, 0);
+        push_digit(buffer, digit, 4, 0);
         // tens of minutes
         digit = (rt % 100) / 10;
-        pushDigit(buffer, digit, 1, 0);
+        push_digit(buffer, digit, 1, 0);
     }
 #else
     unsigned long rt = time;
@@ -286,27 +286,27 @@ void makeTimeDisplayBuffer(char buffer[2][16], unsigned long time) {
     // unit seconds
     rt /= SECOND_MILLIS;
     digit = rt % 10;
-    pushDigit(buffer, digit, 12, 0);
+    push_digit(buffer, digit, 12, 0);
     // tens of seconds
     digit = (rt % 60) / 10;
-    pushDigit(buffer, digit, 10, 0);
+    push_digit(buffer, digit, 10, 0);
     
     // unit minutes
     rt /= 60;
-    digit = rt % 10;
-    pushDigit(buffer, digit, 7, 0);
+digit = rt % 10;
+    push_digit(buffer, digit, 7, 0);
     // tens of minutes
     digit = (rt % 60) / 10;
-    pushDigit(buffer, digit, 5, 0);
+    push_digit(buffer, digit, 5, 0);
 
     // unit hours
     rt /= 60;
     digit = rt % 10;
-    pushDigit(buffer, digit, 2, 0);
+    push_digit(buffer, digit, 2, 0);
 #endif
 }
 
-bool displayBuffersDiffer(char buf1[ROWS][COLS], char buf2[ROWS][COLS]) {
+bool display_buffers_differ(char buf1[ROWS][COLS], char buf2[ROWS][COLS]) {
     uint8_t i, j;
     for (i = 0; i < ROWS; i++) {
         for (j = 0; j < COLS; j++) {
@@ -318,11 +318,11 @@ bool displayBuffersDiffer(char buf1[ROWS][COLS], char buf2[ROWS][COLS]) {
     return false;
 }
 
-void applyDisplayBuffer(LCD_I2C *lcd, char old_buffer[ROWS][COLS], char buffer[ROWS][COLS]) {
+void apply_display_buffer(LCD_I2C *lcd, char old_buffer[ROWS][COLS], char buffer[ROWS][COLS]) {
     uint8_t i, j;
     for (i = 0; i < ROWS; i++) {
         for (j = 0; j < COLS; j++) {
-            if (buffer[i][j] != old_buffer[i][j]) {
+     if (buffer[i][j] != old_buffer[i][j]) {
                 lcd->setCursor(j, i);
                 lcd->write(buffer[i][j]);
             }
@@ -330,36 +330,36 @@ void applyDisplayBuffer(LCD_I2C *lcd, char old_buffer[ROWS][COLS], char buffer[R
     }
 }
 
-void LCDDisplay::renderGameState(GameState *game_state) {
+void LCDDisplay::render_game_state(GameState *game_state) {
     char new_buffers[2][ROWS][COLS];
     int cursor_indices[2] = {-1, -1};
-    blankBuffers(new_buffers, CHAR_BLANK);
+    blank_buffers(new_buffers, CHAR_BLANK);
 
     if (game_state->clock_mode == CM_SELECT_SETTINGS ||
             game_state->clock_mode == CM_EDIT_SETTINGS) {
         last_cursor_indices[0] = cursor_indices[0];
         last_cursor_indices[1] = cursor_indices[1];
-        cursor_indices[0] = makeSettingsDisplayBuffer(
+        cursor_indices[0] = make_settings_display_buffer(
             new_buffers[0], game_state, 0, game_state->settings
         );
-        cursor_indices[1] = makeSettingsDisplayBuffer(
+        cursor_indices[1] = make_settings_display_buffer(
             new_buffers[1], game_state, 1, game_state->settings
         );
     } else {
-        if (game_state->player_states[0].remainingMillis > 0) {
-            makeTimeDisplayBuffer(new_buffers[0], game_state->player_states[0].remainingMillis);
+        if (game_state->player_states[0].remaining_millis > 0) {
+            make_time_display_buffer(new_buffers[0], game_state->player_states[0].remaining_millis);
         } else {
-            makeOutOfTimeBuffer(new_buffers[0]);
+            make_out_of_time_buffer(new_buffers[0]);
         }
-        if (game_state->player_states[1].remainingMillis > 0) {
-            makeTimeDisplayBuffer(new_buffers[1], game_state->player_states[1].remainingMillis);
+        if (game_state->player_states[1].remaining_millis > 0) {
+            make_time_display_buffer(new_buffers[1], game_state->player_states[1].remaining_millis);
         } else {
-            makeOutOfTimeBuffer(new_buffers[1]);
+            make_out_of_time_buffer(new_buffers[1]);
         }
     }
 
-    if (displayBuffersDiffer(new_buffers[0], last_displayed[0])) {
-        applyDisplayBuffer(&player_1, last_displayed[0], new_buffers[0]);
+    if (display_buffers_differ(new_buffers[0], last_displayed[0])) {
+        apply_display_buffer(&player_1, last_displayed[0], new_buffers[0]);
         memcpy(last_displayed[0], new_buffers[0], ROWS * COLS * sizeof(new_buffers[0][0][0]));
     }
     if (cursor_indices[0] == -1) {
@@ -368,8 +368,8 @@ void LCDDisplay::renderGameState(GameState *game_state) {
         player_1.cursor();
         player_1.setCursor(cursor_indices[0] % 16, (uint8_t) (cursor_indices[0] / 16));
     }
-    if (displayBuffersDiffer(new_buffers[1], last_displayed[1])) {
-        applyDisplayBuffer(&player_2, last_displayed[1], new_buffers[1]);
+    if (display_buffers_differ(new_buffers[1], last_displayed[1])) {
+        apply_display_buffer(&player_2, last_displayed[1], new_buffers[1]);
         memcpy(last_displayed[1], new_buffers[1], ROWS * COLS * sizeof(new_buffers[0][0][0]));
     }
     if (cursor_indices[1] == -1) {
@@ -380,8 +380,8 @@ void LCDDisplay::renderGameState(GameState *game_state) {
     }
 }
 
-/* LCDDisplay interprets the "specialToggle" event to mean that it should toggle both backlights. */
-void LCDDisplay::specialToggle(void) {
+/* LCDDisplay interprets the "special_toggle" event to mean that it should toggle both backlights. */
+void LCDDisplay::special_toggle(void) {
     backlight = !backlight;
     if (backlight) {
         player_1.backlight();
@@ -395,7 +395,7 @@ void LCDDisplay::specialToggle(void) {
 /* Display text directly on the screens */
 void LCDDisplay::print(const char *str) {
     char new_buffers[2][ROWS][COLS];
-    blankBuffers(new_buffers);
+    blank_buffers(new_buffers);
     uint8_t i;
     for (i = 0; i < ROWS * COLS * 2; i++) {
         if (str[i] == 0x00) {
@@ -403,8 +403,8 @@ void LCDDisplay::print(const char *str) {
         }
         new_buffers[1 - (i / (ROWS * COLS))][(i / COLS) % ROWS][i % COLS] = str[i];
     }
-    applyDisplayBuffer(&player_1, last_displayed[0], new_buffers[0]);
-    applyDisplayBuffer(&player_2, last_displayed[1], new_buffers[1]);
+    apply_display_buffer(&player_1, last_displayed[0], new_buffers[0]);
+    apply_display_buffer(&player_2, last_displayed[1], new_buffers[1]);
     memcpy(last_displayed[0], new_buffers[0], ROWS * COLS * sizeof(new_buffers[0][0][0]));
     memcpy(last_displayed[1], new_buffers[1], ROWS * COLS * sizeof(new_buffers[0][0][0]));
 }

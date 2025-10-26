@@ -25,8 +25,8 @@ class LCDDisplay8 : public ChessDisplay {
     public:
         LCDDisplay8(uint8_t addr_1, uint8_t addr_2);
         void begin(void);
-        void specialToggle(void);
-        void renderGameState(GameState *game_state);
+        void special_toggle(void);
+        void render_game_state(GameState *game_state);
         void print(const char *str);
         void print(const char *strA, const char *strB);
     private:
@@ -34,7 +34,7 @@ class LCDDisplay8 : public ChessDisplay {
         bool backlight;
         char last_displayed[2][COLS];
         int last_cursor_indices[2];
-        void applyBuffers(char buffers[2][COLS]);
+        void apply_buffers(char buffers[2][COLS]);
 };
 
 #endif // DISPLAY_LCD8_H

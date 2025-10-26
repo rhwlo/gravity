@@ -7,7 +7,7 @@ SerialDisplay::SerialDisplay(Stream *s) {
 void SerialDisplay::begin(void) {
 }
 
-void SerialDisplay::prettyPrintTime(unsigned long time) {
+void SerialDisplay::pretty_print_time(unsigned long time) {
     unsigned long remaining_time = time;
     if (remaining_time >= HOUR_MILLIS * 10) {
         serial->print((int) (remaining_time / HOUR_MILLIS), 10);
@@ -43,31 +43,31 @@ void SerialDisplay::prettyPrintTime(unsigned long time) {
     }
 }
 
-void SerialDisplay::specialToggle(void) {
+void SerialDisplay::special_toggle(void) {
     serial->println("Special toggle event");
 }
 
-void SerialDisplay::renderGameState(GameState *game_state) {
+void SerialDisplay::render_game_state(GameState *game_state) {
     if (game_state->clock_mode == CM_PAUSED) {
         serial->println("PAUSED");
     }
-    if (game_state->player_states[0].outOfTime || game_state->player_states[1].outOfTime) {
+    if (game_state->player_states[0].out_of_time || game_state->player_states[1].out_of_time) {
         serial->print("Out of time: ");
-        if (game_state->player_states[PLAYER_1].outOfTime) {
+        if (game_state->player_states[PLAYER_1].out_of_time) {
             serial->print("W ");
         }
-        if (game_state->player_states[PLAYER_1].outOfTime) {
+        if (game_state->player_states[PLAYER_1].out_of_time) {
             serial->print("B ");
         }
         serial->println();
     }
-    if (game_state->whoseTurn == PLAYER_1) {
+    if (game_state->whose_turn == PLAYER_1) {
         serial->println("White to move");
-        prettyPrintTime(game_state->player_states[PLAYER_1].remainingMillis);
+        pretty_print_time(game_state->player_states[PLAYER_1].remaining_millis);
         serial->println();
     } else {
         serial->println("Black to move");
-        prettyPrintTime(game_state->player_states[PLAYER_2].remainingMillis);
+        pretty_print_time(game_state->player_states[PLAYER_2].remaining_millis);
         serial->println();
     }
 }

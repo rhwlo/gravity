@@ -9,12 +9,12 @@
 class SerialDisplay : public ChessDisplay {
     public:
         SerialDisplay(Stream *s);
-        void renderGameState(GameState *game_state);
+        void render_game_state(GameState *game_state);
         void begin(void);
-        void specialToggle(void);
+        void special_toggle(void);
         void print(const char *str);
     private:
-        void prettyPrintTime(unsigned long time);
+        void pretty_print_time(unsigned long time);
         Stream *serial;
 };
 

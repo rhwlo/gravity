@@ -74,8 +74,8 @@ class LCDDisplay : public ChessDisplay {
     public:
         LCDDisplay(uint8_t addr_1, uint8_t addr_2);
         void begin(void);
-        void specialToggle(void);
-        void renderGameState(GameState *game_state);
+        void special_toggle(void);
+        void render_game_state(GameState *game_state);
         void print(const char *str);
         void print(const char *strA, const char *strB);
     private:

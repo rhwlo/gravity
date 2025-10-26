@@ -1,13 +1,13 @@
 #include <Arduino.h>
 #include "buzzer.h"
 
-void singleBeep(void) {
+void single_beep(void) {
     tone(BUZZER_PIN, BUZZER_TONE);
     delay(110);
     noTone(BUZZER_PIN);
 }
 
-void doubleBeep(void) {
+void double_beep(void) {
     tone(BUZZER_PIN, BUZZER_TONE);
     delay(110);
     noTone(BUZZER_PIN);
@@ -17,7 +17,7 @@ void doubleBeep(void) {
     noTone(BUZZER_PIN);
 }
 
-void chirpFifth(void) {
+void chirp_fifth(void) {
     tone(BUZZER_PIN, BUZZER_TONE);
     delay(60);
     tone(BUZZER_PIN, BUZZER_TONE_FIFTH);
@@ -25,7 +25,7 @@ void chirpFifth(void) {
     noTone(BUZZER_PIN);
 }
 
-void chirpFiveSeven(void) {
+void chirp_five_seven(void) {
     tone(BUZZER_PIN, BUZZER_TONE);
     delay(60);
     tone(BUZZER_PIN, BUZZER_TONE_FIFTH);
@@ -35,7 +35,7 @@ void chirpFiveSeven(void) {
     noTone(BUZZER_PIN);
 }
 
-void chirpSus4(void) {
+void chirp_sus4(void) {
     tone(BUZZER_PIN, BUZZER_TONE);
     delay(60);
     tone(BUZZER_PIN, BUZZER_TONE_FOURTH);
@@ -45,7 +45,7 @@ void chirpSus4(void) {
     noTone(BUZZER_PIN);
 }
 
-void tripleBeep(void) {
+void triple_beep(void) {
     tone(BUZZER_PIN, BUZZER_TONE);
     delay(110);
     noTone(BUZZER_PIN);
@@ -59,30 +59,30 @@ void tripleBeep(void) {
     noTone(BUZZER_PIN);
 }
 
-void beep(beep_event_t event) {
+void beep(BeepEvent event) {
     switch (event)
     {
     case BE_PAUSE:
     case BE_TURN_CHANGE:
-        singleBeep();
+        single_beep();
         return;
     case BE_SELECT_SETTINGS:
     case BE_RESET:
-        chirpFifth();
+        chirp_fifth();
         return;
     case BE_EDIT_SETTINGS:
     case BE_SAVE_SETTINGS:
-        chirpFiveSeven();
+        chirp_five_seven();
         return;
     case BE_FLAG:
-        tripleBeep();
+        triple_beep();
         return;
     case BE_WARNING:
-        doubleBeep();
+        double_beep();
         return;
     case BE_SPECIAL_TOGGLE:
-        chirpFiveSeven();
-        chirpFiveSeven();
+        chirp_five_seven();
+        chirp_five_seven();
         return;
     default:
         break;

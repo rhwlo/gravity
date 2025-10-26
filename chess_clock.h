@@ -14,12 +14,11 @@
 #define LED_ON_LEVEL            35
 #endif
 
+// delay values (defined in milliseconds)
 #define DEBOUNCE_DELAY          100
 #define LONG_PRESS_DELAY        1000
 #define PRINT_INTERVAL          75
 
-#define PLAYER_RIGHT_IDX 0
-#define PLAYER_LEFT_IDX  1
 #define PLAYER1_IDX 0
 #define PLAYER2_IDX 1
 #define CENTER_IDX  2

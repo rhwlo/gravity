@@ -21,5 +21,4 @@
 
 #define PLAYER1_IDX 0
 #define PLAYER2_IDX 1
-#define CENTER_IDX  2
 

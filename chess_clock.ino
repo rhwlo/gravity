@@ -11,12 +11,10 @@
 
 #include "chess_clock.h"
 #include "buzzer.h"
+#include "src/button.h"
 
-// TODO: refactor button presses into a struct to track this better
-unsigned long last_state_changed_time[3] = { 0, 0, 0 };
-int last_state[3] = { HIGH, HIGH, HIGH };
-byte unprocessed_presses[3] = { 0, 0, 0 };
-bool ignore_next_release[3] = { false, false, false };
+ButtonState center_button_state = ButtonState(),
+            player_button_states[2] = { ButtonState(), ButtonState() };
 
 unsigned long last_incremented_at = 0;
 unsigned long last_printed_at = 0;
@@ -129,33 +127,33 @@ void setup() {
 
 /* handles a state changed the pause button's state changing;
  * returns: true if it modifies any state, false otherwise. */
-bool handle_pause_button(GameState *gs, int button_state, unsigned long now) {
+bool handle_pause_button(GameState *gs, int button_value, unsigned long now) {
 
   if (
     // Return false (unchanged) early if:
     // 1. we aren't past the debounce delay, or
-    (now - last_state_changed_time[CENTER_IDX] < DEBOUNCE_DELAY)
-    // 2. the button_state hasn't changed from what was last recorded
-    || (button_state == last_state[CENTER_IDX])) {
+    (now - center_button_state.last_changed_at < DEBOUNCE_DELAY)
+    // 2. the button value hasn't changed from what was last recorded
+    || (button_value == center_button_state.last_state)) {
     return false;
   }
 
   // Preserve the prior state change time (i.e., the state change before this one)
-  unsigned long prev_state_changed_time = last_state_changed_time[CENTER_IDX];
+  unsigned long prev_state_changed_time = center_button_state.last_changed_at;
 
   // Update the last button state and the last state changed time
-  last_state[CENTER_IDX] = button_state;
-  last_state_changed_time[CENTER_IDX] = now;
+  center_button_state.last_state = button_value;
+  center_button_state.last_changed_at = now;
 
   // For the moment, we don't do anything when the button is pressed -- just when released.
-  if (button_state == LOW) {
+  if (button_value == LOW) {
     return false;
   }
 
   // handle pause button released
 
-  if (ignore_next_release[CENTER_IDX]) {
-    ignore_next_release[CENTER_IDX] = false;
+  if (center_button_state.ignore_next_release) {
+    center_button_state.ignore_next_release = false;
     return false;
   }
 
@@ -165,13 +163,13 @@ bool handle_pause_button(GameState *gs, int button_state, unsigned long now) {
     if (gs->clock_mode == CM_SELECT_SETTINGS) {
       gs->option_index = OI_P2_HOURS;
       gs->clock_mode = CM_EDIT_SETTINGS;
-      unprocessed_presses[CENTER_IDX] = 0;
+      center_button_state.unprocessed_presses = 0;
       beep(BE_EDIT_SETTINGS);
       return true;
       // long press, save changes : EDIT_SETTINGS -> SELECT_SETTINGS
     } else if (gs->clock_mode == CM_EDIT_SETTINGS) {
       gs->clock_mode = CM_SELECT_SETTINGS;
-      unprocessed_presses[CENTER_IDX] = 0;
+      center_button_state.unprocessed_presses = 0;
       gs->option_index = -1;
       gs->reset();
       blink_forever_for_error(3, write_settings_to_eeprom(&eeprom));
@@ -182,13 +180,13 @@ bool handle_pause_button(GameState *gs, int button_state, unsigned long now) {
     // EDIT SETTINGS), it behaves like a short press.
   }
   // short press
-  unprocessed_presses[CENTER_IDX]++;
+  center_button_state.unprocessed_presses++;
 
   // 1x short press : ACTIVE -> PAUSED                      "pause"
   if (gs->clock_mode == CM_ACTIVE) {
     gs->clock_mode = CM_PAUSED;
     // make sure the counter is at 1
-    unprocessed_presses[CENTER_IDX] = 1;
+    center_button_state.unprocessed_presses = 1;
     analogWrite(PLAYER1_LED_PIN, LED_OFF_LEVEL);
     analogWrite(PLAYER2_LED_PIN, LED_OFF_LEVEL);
     beep(BE_PAUSE);
@@ -196,11 +194,11 @@ bool handle_pause_button(GameState *gs, int button_state, unsigned long now) {
   }
 
   // 3x short press (or more) : PAUSED -> SELECT_SETTINGS   "reset"
-  if (gs->clock_mode == CM_PAUSED && unprocessed_presses[CENTER_IDX] > 2) {
+  if (gs->clock_mode == CM_PAUSED && center_button_state.unprocessed_presses > 2) {
     gs->clock_mode = CM_SELECT_SETTINGS;
     gs->reset();
     beep(BE_RESET);
-    unprocessed_presses[CENTER_IDX] = 0;
+    center_button_state.unprocessed_presses = 0;
     return true;
   }
 
@@ -225,18 +223,18 @@ bool handle_pause_button(GameState *gs, int button_state, unsigned long now) {
 /* handle press/release events for the player buttons;
  * returns: true if the state has changed, false otherwise. */
 bool handle_player_button(
-  GameState *gs, int button_state, unsigned long now, uint8_t player_index) {
-  if (now - last_state_changed_time[player_index] < DEBOUNCE_DELAY) {
+  GameState *gs, int button_value, unsigned long now, uint8_t player_index) {
+  if (now - player_button_states[player_index].last_changed_at < DEBOUNCE_DELAY) {
     return false;
   }
-  if (button_state == last_state[player_index]) {
+  if (button_value == player_button_states[player_index].last_state) {
     return false;
   }
-  last_state[player_index] = button_state;
-  last_state_changed_time[player_index] = now;
+  player_button_states[player_index].last_state = button_value;
+  player_button_states[player_index].last_changed_at = now;
 
   // We don't take action when buttons are pressed, only released
-  if (button_state == LOW) {
+  if (button_value == LOW) {
     return false;
   }
   // handle released button
@@ -247,20 +245,20 @@ bool handle_player_button(
   }
 
   // if the center button is pressed, treat this as a "special toggle"
-  if (last_state[CENTER_IDX] == LOW) {
-    ignore_next_release[CENTER_IDX] = true;
-    unprocessed_presses[player_index]++;
-    if (unprocessed_presses[player_index] >= 3) {
+  if (center_button_state.last_state == LOW) {
+    center_button_state.ignore_next_release = true;
+    player_button_states[player_index].unprocessed_presses++;
+    if (player_button_states[player_index].unprocessed_presses >= 3) {
       beep(BE_SPECIAL_TOGGLE);
       display.special_toggle();
-      unprocessed_presses[player_index] = 0;
+      player_button_states[player_index].unprocessed_presses = 0;
     }
     return true;
   }
 
-  if (ignore_next_release[player_index]) {
-    ignore_next_release[player_index] = false;
-    unprocessed_presses[player_index] = 0;
+  if (player_button_states[player_index].ignore_next_release) {
+    player_button_states[player_index].ignore_next_release = false;
+    player_button_states[player_index].unprocessed_presses = 0;
     return false;
   }
 

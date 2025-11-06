@@ -187,7 +187,7 @@ void render_edit_settings(char buffers[2][COLS], int cursor_positions[2], GameSt
         cursor_positions[0] = 6;
     } else {
         make_time_display_buffer(buffers[0], game_settings->player_settings[0].total_millis, ':', D_DL18_MODE_HH_MM_SS);
-        make_time_display_buffer(buffers[1], game_settings->player_settings[0].total_millis, ':', D_DL18_MODE_HH_MM_SS);
+        make_time_display_buffer(buffers[1], game_settings->player_settings[1].total_millis, ':', D_DL18_MODE_HH_MM_SS);
         switch (game_state->option_index) {
             case OI_P1_HOURS:
                 cursor_positions[0] = 1;
